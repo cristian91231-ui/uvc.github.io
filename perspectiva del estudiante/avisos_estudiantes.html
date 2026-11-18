@@ -11,7 +11,7 @@
 
     .pantalla {
       position: relative; width: 100vw; height: 100vh; min-height: 500px; overflow: hidden;
-      background: url("../imagenes/estudiantes/avisos.png") center/100% 100% no-repeat;
+      background: url("../imagenes/estudiantes/avisos.png?v=2") center/100% 100% no-repeat;
     }
 
     /* Indicador lateral */
@@ -664,7 +664,7 @@
       e.preventDefault();
       detenerNotificaciones?.();
       ["usuarioUV", "perfilSeleccionadoUV", "tipoUsuario", "chatPendienteUV"].forEach(k => sessionStorage.removeItem(k));
-      window.location.assign(new URL("../codigo principal/login.html", window.location.href).href);
+      window.location.assign(new URL("../codigo principal/login.html?v=2", window.location.href).href);
     });
 
     document.addEventListener("click", e => {

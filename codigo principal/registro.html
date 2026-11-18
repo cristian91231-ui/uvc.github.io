@@ -24,7 +24,7 @@
     /* Contenedor a pantalla completa ajustado exactamente a la imagen de fondo (1920x1080) */
     .pantalla {
       position: relative; width: 100vw; height: 100vh; min-width: 900px; min-height: 540px;
-      background: url("../imagenes/principales/registrarse.jpg") center / 100% 100% no-repeat;
+      background: url("../imagenes/principales/registrarse.jpg?v=2") center / 100% 100% no-repeat;
     }
 
     /* El formulario ocupa todo el contenedor para posicionar sus hijos respecto a él */
@@ -106,7 +106,7 @@
 <main class="pantalla">
   <form id="formRegistro">
     <!-- Botón sobre la flecha superior izquierda para regresar -->
-    <a class="abs btn" id="volver" href="login.html" aria-label="Volver al inicio de sesión" title="Volver"></a>
+    <a class="abs btn" id="volver" href="login.html?v=2" aria-label="Volver al inicio de sesión" title="Volver"></a>
 
     <!-- Campos de datos del usuario -->
     <input class="abs campo" id="correo" type="email" placeholder="tu.correo@uv.mx" required>
@@ -163,7 +163,7 @@
 
   // Verifica que exista un tipo de usuario seleccionado en la sesión
   const tipoUsuario = sessionStorage.getItem("tipoUsuario");
-  if (!tipoUsuario) window.location.replace("tutor-estudiante.html");
+  if (!tipoUsuario) window.location.replace("tutor-estudiante.html?v=2");
 
   // Referencias a los elementos del formulario y modal
   const form = document.getElementById("formRegistro");
@@ -214,7 +214,7 @@
       ponerMensaje("¡Listo! Redirigiendo al login...", "green");
       form.reset();
       // Redirige a la pantalla de login tras 1.5 segundos
-      setTimeout(() => window.location.replace("login.html"), 1500);
+      setTimeout(() => window.location.replace("login.html?v=2"), 1500);
     } catch (error) {
       console.log(error);
       ponerMensaje("Error al guardar.", "red");
@@ -274,7 +274,7 @@
 
   // Botón para ir a la página de iniciar sesión si ya tiene cuenta
   document.getElementById("irLogin").onclick = function() {
-    window.location.href = "login.html";
+    window.location.href = "login.html?v=2";
   };
 </script>
 </body>

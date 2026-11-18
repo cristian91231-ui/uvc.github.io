@@ -11,7 +11,7 @@
 
     .pantalla {
       position: relative; width: 100vw; height: 100vh; min-width: 900px; min-height: 560px; overflow: hidden;
-      background: url("../imagenes/estudiantes/configuracion_estudiantes.png") center/100% 100% no-repeat;
+      background: url("../imagenes/estudiantes/configuracion_estudiantes.png?v=2") center/100% 100% no-repeat;
     }
 
     .zona { position: absolute; z-index: 20; border: 0; padding: 0; background: transparent; cursor: pointer; }
@@ -257,7 +257,7 @@
 
     const rolUsuario = String(usuario?.tipoUsuario || usuario?.rol || sessionStorage.getItem("tipoUsuario") || "").trim().toLowerCase();
     if (!usuario || rolUsuario.includes("tutor") || rolUsuario.includes("docente")) {
-      location.replace("../codigo principal/login.html");
+      location.replace("../codigo principal/login.html?v=2");
       throw new Error("No existe una sesión válida de estudiante.");
     }
 
@@ -655,7 +655,7 @@
     $("cerrarSesion").onclick = () => {
       detenerUsuario?.();
       sessionStorage.clear();
-      location.href = "../codigo principal/login.html";
+      location.href = "../codigo principal/login.html?v=2";
     };
 
     window.addEventListener("keydown", e => {

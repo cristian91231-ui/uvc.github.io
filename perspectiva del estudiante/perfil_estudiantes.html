@@ -281,9 +281,9 @@
   // Cargar fondo con respaldo de rutas
   const fondo = document.getElementById("fondoImg");
   const rutasFondo = [
-    "../imagenes/estudiantes/perfil_estudiante.png",
-    "../imagenes/estudiantes/perfil_estudiante.png",
-    "imagenes/estudiantes/perfil_estudiante.png"
+    "../imagenes/estudiantes/perfil_estudiante.png?v=2",
+    "../imagenes/estudiantes/perfil_estudiante.png?v=2",
+    "imagenes/estudiantes/perfil_estudiante.png?v=2"
   ];
   let idxFondo = 0;
   fondo.onerror = () => {
@@ -306,12 +306,12 @@ const $ = id => document.getElementById(id);
 
 // Revisar sesión activa del estudiante
 const usuario = JSON.parse(sessionStorage.getItem("usuarioUV") || "null");
-if (!usuario) location.replace("../codigo principal/login.html");
+if (!usuario) location.replace("../codigo principal/login.html?v=2");
 
 const matricula = String(usuario.matricula || "").trim();
 const correo = String(usuario.correo || usuario.email || "").trim();
 const idUsuario = matricula || correo;
-if (!idUsuario) location.replace("../codigo principal/login.html");
+if (!idUsuario) location.replace("../codigo principal/login.html?v=2");
 
 let nombreActual = usuario.nombrePerfil || usuario.nombre || correo || "Estudiante";
 let descActual = usuario.descripcion || "";
@@ -688,7 +688,7 @@ $("btnMenuPerfil").onclick = e => {
 $("cerrarSesion").onclick = () => {
   stopPosts?.(); stopUser?.(); stopNotif?.();
   sessionStorage.clear();
-  location.href = "../codigo principal/login.html";
+  location.href = "../codigo principal/login.html?v=2";
 };
 
 window.onclick = e => {

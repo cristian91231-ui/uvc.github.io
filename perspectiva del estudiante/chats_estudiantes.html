@@ -11,7 +11,7 @@
 
     .pantalla {
       position: relative; width: 100vw; height: 100vh; min-width: 900px; min-height: 560px; overflow: hidden;
-      background: url("../imagenes/estudiantes/chats_estudiantes.png") center/100% 100% no-repeat;
+      background: url("../imagenes/estudiantes/chats_estudiantes.png?v=2") center/100% 100% no-repeat;
     }
 
     .zona { position: absolute; z-index: 10; border: 0; background: transparent; padding: 0; cursor: pointer; }
@@ -287,14 +287,14 @@
 
     const usuario = leerSesion();
     if (!usuario) {
-      location.replace("../codigo principal/login.html");
+      location.replace("../codigo principal/login.html?v=2");
       throw new Error("No existe una sesión activa.");
     }
 
     const usuarioId = String(usuario.matricula || "").trim();
     if (!usuarioId) {
       alert("Tu sesión no contiene una matrícula. Cierra sesión e inicia nuevamente.");
-      location.replace("../codigo principal/login.html");
+      location.replace("../codigo principal/login.html?v=2");
       throw new Error("La sesión no contiene matrícula.");
     }
 
@@ -842,7 +842,7 @@
       detenerEnviados?.();
       detenerRecibidos?.();
       ["usuarioUV", "perfilSeleccionadoUV", "tipoUsuario", "chatPendienteUV"].forEach(k => sessionStorage.removeItem(k));
-      location.href = "../codigo principal/login.html";
+      location.href = "../codigo principal/login.html?v=2";
     });
 
     document.addEventListener("click", e => {

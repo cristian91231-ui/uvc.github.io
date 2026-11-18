@@ -9,7 +9,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html, body { width: 100%; height: 100%; font-family: Arial, sans-serif; overflow: hidden; background: #f4faff; }
         
-        .pantalla { position: relative; width: 100vw; height: 100vh; min-height: 500px; background: #e8f1fc url("../imagenes/tutorados/pantalla_principal_tutor.png") center/100% 100% no-repeat; }
+        .pantalla { position: relative; width: 100vw; height: 100vh; min-height: 500px; background: #e8f1fc url("../imagenes/tutorados/pantalla_principal_tutor.png?v=2") center/100% 100% no-repeat; }
         
         /* Controles interactivos generales */
         .zona, .materia, .menu-flecha, .btn-notif { position: absolute; z-index: 10; background: transparent; border: 0; cursor: pointer; border-radius: 12px; transition: background 0.2s; }
@@ -205,7 +205,7 @@
     // Eventos de los botones de notificaciones, menú desplegable y cerrar sesión
     $("btnNotificaciones").onclick = e => { e.stopPropagation(); togglePanel("panelNotificaciones"); };
     $("menuFlecha").onclick = e => { e.stopPropagation(); togglePanel("menuUsuarioPanel"); };
-    $("cerrarSesion").onclick = () => { sessionStorage.clear(); window.location.href = "../codigo principal/login.html"; };
+    $("cerrarSesion").onclick = () => { sessionStorage.clear(); window.location.href = "../codigo principal/login.html?v=2"; };
 
     // Cierra los paneles desplegables al hacer clic fuera de ellos
     document.onclick = e => {

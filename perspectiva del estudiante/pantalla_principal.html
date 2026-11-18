@@ -357,12 +357,12 @@
       if (!fondo) return;
 
       const rutas = [
-        "../imagenes/estudiantes/pantalla_principal.png",
-        "../imagenes/estudiantes/pantalla_principal.jpg",
-        "../imagenes/estudiantes/pantalla_principal.png",
-        "../imagenes/estudiantes/pantalla_principal.jpg",
-        "imagenes/estudiantes/pantalla_principal.png",
-        "imagenes/estudiantes/pantalla_principal.jpg"
+        "../imagenes/estudiantes/pantalla_principal.png?v=2",
+        "../imagenes/estudiantes/pantalla_principal.jpg?v=2",
+        "../imagenes/estudiantes/pantalla_principal.png?v=2",
+        "../imagenes/estudiantes/pantalla_principal.jpg?v=2",
+        "imagenes/estudiantes/pantalla_principal.png?v=2",
+        "imagenes/estudiantes/pantalla_principal.jpg?v=2"
       ];
       let i = 0;
 
@@ -970,7 +970,7 @@
       escuchasComentarios.forEach(fn => fn());
       sessionStorage.removeItem("usuarioUV");
       sessionStorage.removeItem("chatPendienteUV");
-      window.location.href = "../codigo principal/login.html";
+      window.location.href = "../codigo principal/login.html?v=2";
     };
 
     document.addEventListener("click", e => {

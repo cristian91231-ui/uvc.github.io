@@ -8,7 +8,7 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:100%;min-height:100%;font-family:Arial,sans-serif;background:#f4faff;overflow:hidden;}
 button,input,textarea{font:inherit;}
-.pantalla{position:relative;width:100vw;height:100vh;min-height:560px;background:url("../../imagenes/tutorados/materias/metodologia_de_la_programacion_tutor.png") center / 100% 100% no-repeat;}
+.pantalla{position:relative;width:100vw;height:100vh;min-height:560px;background:url("../../imagenes/tutorados/materias/metodologia_de_la_programacion_tutor.png?v=2") center / 100% 100% no-repeat;}
 /* Clase base para áreas y botones transparentes sobre los iconos del diseño */
 .zona{position:absolute;z-index:10;display:block;border:0;border-radius:8px;background:transparent;cursor:pointer;}
 .zona:hover{background:rgba(20,120,230,.10);}
@@ -202,7 +202,7 @@ const tutorId = String(usuario.matricula || usuario.correo || usuario.email || "
 const nombreTutorCompleto = String(usuario.nombre || usuario.nombreCompleto || usuario.correo || "Tutor").trim();
 const rolSesion = String(sessionStorage.getItem("tipoUsuario") || usuario.tipoUsuario || "Tutor");
 
-if (!usuario.matricula && !usuario.correo && !usuario.email) location.replace("../../codigo%20principal/login.html");
+if (!usuario.matricula && !usuario.correo && !usuario.email) location.replace("../../codigo%20principal/login.html?v=2");
 
 let alumnos = [], datosMat = {}, archivosSel = [], alumnoSel = null, encuestaPendiente = null, timerMsg = null;
 
@@ -229,7 +229,7 @@ $("rolTutor").textContent = /estudiante/i.test(rolSesion) ? "Estudiante" : "Tuto
 // Eventos de navegación del perfil, menú desplegable y botón de cerrar sesión
 $("btnPerfilFoto").onclick = () => window.location.href = "../perfil_tutor.html";
 $("menuFlecha").onclick = e => { e.stopPropagation(); $("menuFlecha").setAttribute("aria-expanded", String($("menuUsuarioPanel").classList.toggle("visible"))); };
-$("cerrarSesion").onclick = () => { sessionStorage.clear(); location.href = "../../codigo%20principal/login.html"; };
+$("cerrarSesion").onclick = () => { sessionStorage.clear(); location.href = "../../codigo%20principal/login.html?v=2"; };
 
 // Cierra los paneles flotantes cuando se hace clic fuera de ellos
 document.onclick = e => {

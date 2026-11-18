@@ -96,7 +96,7 @@
 </head>
 <body>
 <!-- Imagen de fondo del login -->
-<img src="../imagenes/principales/iniciar-sesion.png" class="fondo" alt="Login UV">
+<img src="../imagenes/principales/iniciar-sesion.png?v=2" class="fondo" alt="Login UV">
 
 <!-- Formulario de inicio de sesión superpuesto al diseño -->
 <form id="formLogin">
@@ -107,11 +107,11 @@
   <!-- Botón sobre el icono del ojo para mostrar/ocultar la contraseña -->
   <button class="abs btn ojo" type="button" id="verClave" aria-label="Mostrar u ocultar contraseña" title="Mostrar u ocultar contraseña"></button>
   <!-- Botón sobre "¿Olvidaste tu contraseña?" -->
-  <a class="abs btn recuperar" id="btnRecuperar" href="registro.html" aria-label="Recuperar contraseña" title="¿Olvidaste tu contraseña?"></a>
+  <a class="abs btn recuperar" id="btnRecuperar" href="registro.html?v=2" aria-label="Recuperar contraseña" title="¿Olvidaste tu contraseña?"></a>
   <!-- Botón principal sobre "Iniciar sesión" -->
   <button class="abs btn accion entrar" type="submit" aria-label="Iniciar sesión" title="Iniciar sesión"></button>
   <!-- Botón sobre "Registrarse" que lleva al formulario de registro -->
-  <a class="abs btn accion registrar" href="registro.html" aria-label="Registrarse" title="Registrarse"></a>
+  <a class="abs btn accion registrar" href="registro.html?v=2" aria-label="Registrarse" title="Registrarse"></a>
 </form>
 
 <!-- Párrafo donde se muestran avisos de carga o errores -->
@@ -140,7 +140,7 @@
   // Recupera si el usuario eligió entrar como 'tutor' o 'estudiante'
   const tipoUsuario = sessionStorage.getItem("tipoUsuario");
   // Si no ha elegido rol, lo regresa a la pantalla de selección
-  if (!tipoUsuario) window.location.replace("tutor-estudiante.html");
+  if (!tipoUsuario) window.location.replace("tutor-estudiante.html?v=2");
 
   // Referencias a los elementos del DOM
   const claveInput = document.getElementById("contraseña");

@@ -9,7 +9,7 @@
 *{box-sizing:border-box;}
 html,body{width:100%;height:100%;margin:0;font-family:Arial,sans-serif;}
 body{overflow:hidden;background:#edf5ff;color:#102b59;}
-.pantalla{position:relative;width:100vw;height:100vh;min-width:900px;min-height:560px;overflow:hidden;background:url("../imagenes/tutorados/configuracion_tutor.png") center/100% 100% no-repeat;}
+.pantalla{position:relative;width:100vw;height:100vh;min-width:900px;min-height:560px;overflow:hidden;background:url("../imagenes/tutorados/configuracion_tutor.png?v=2") center/100% 100% no-repeat;}
 
 /* Clase base para áreas y botones transparentes sobre los iconos del diseño */
 .zona{position:absolute;z-index:20;border:0;padding:0;background:transparent;cursor:pointer;border-radius:8px;}
@@ -151,7 +151,7 @@ const rolUsuario = String(usuario?.tipoUsuario || usuario?.rol || sessionStorage
 const esTutor = rolUsuario.includes("tutor") || rolUsuario.includes("docente");
 
 if (!usuario || !esTutor) {
-  location.replace("../codigo%20principal/login.html");
+  location.replace("../codigo%20principal/login.html?v=2");
   throw new Error("No existe una sesión válida de tutor.");
 }
 
@@ -720,7 +720,7 @@ $("btnNotificaciones").onclick = () => {
 $("cerrarSesion").onclick = () => {
   if (detenerUsuario) detenerUsuario();
   sessionStorage.clear();
-  location.href = "../codigo%20principal/login.html";
+  location.href = "../codigo%20principal/login.html?v=2";
 };
 
 window.onkeydown = e => {

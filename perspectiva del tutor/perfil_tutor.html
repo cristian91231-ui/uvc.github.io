@@ -8,7 +8,7 @@
 /* Configuración general de la página y contenedor con imagen de fondo */
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{width:100%;height:100%;font-family:Arial,sans-serif;overflow:hidden;background:#edf5ff;color:#102b59;}
-.pantalla{position:relative;width:100vw;height:100vh;min-width:900px;min-height:560px;background:url("../imagenes/tutorados/perfil_tutor.png") center/100% 100% no-repeat;}
+.pantalla{position:relative;width:100vw;height:100vh;min-width:900px;min-height:560px;background:url("../imagenes/tutorados/perfil_tutor.png?v=2") center/100% 100% no-repeat;}
 
 /* Clase base para áreas y botones transparentes sobre los iconos del diseño */
 .zona{position:absolute;z-index:20;border:0;background:0 0;cursor:pointer;border-radius:8px;}
@@ -201,7 +201,7 @@ const usuarioActual = (() => {
 })();
 
 if (!usuarioActual) {
-  location.replace("../codigo principal/login.html");
+  location.replace("../codigo principal/login.html?v=2");
   throw new Error("No existe una sesión activa.");
 }
 
@@ -763,7 +763,7 @@ $("cerrarSesion").onclick = () => {
   sessionStorage.removeItem("usuarioUV");
   sessionStorage.removeItem("perfilSeleccionadoUV");
   sessionStorage.removeItem("tipoUsuario");
-  location.href = "../codigo principal/login.html";
+  location.href = "../codigo principal/login.html?v=2";
 };
 
 window.addEventListener("click", evento => {

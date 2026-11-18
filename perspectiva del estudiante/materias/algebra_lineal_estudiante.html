@@ -12,7 +12,7 @@
     /* Contenedor principal con fondo */
     .pantalla {
       position: relative; width: 100vw; height: 100vh; min-height: 600px; overflow: hidden;
-      background: #f3f8ff url("../../imagenes/estudiantes/materias/algebra_lineal.png") center/100% 100% no-repeat;
+      background: #f3f8ff url("../../imagenes/estudiantes/materias/algebra_lineal.png?v=2") center/100% 100% no-repeat;
     }
     .sidebar, .volver, .encabezado-materia, .espacio-cabecera { display: none !important; }
     .cabecera { display: contents; }
@@ -776,7 +776,7 @@
       limpiarComentarios();
 
       ["usuarioUV", "tipoUsuario", "perfilSeleccionadoUV", "chatPendienteUV"].forEach(k => sessionStorage.removeItem(k));
-      window.location.href = "../../codigo principal/login.html";
+      window.location.href = "../../codigo principal/login.html?v=2";
     });
 
     document.addEventListener("click", e => {

@@ -8,7 +8,7 @@
 *{box-sizing:border-box}
 html,body{width:100%;height:100%;margin:0;font-family:Arial,Helvetica,sans-serif}
 body{overflow:hidden;background:#edf5ff;color:#12295a}
-.pantalla{position:relative;width:100vw;height:100vh;min-width:900px;min-height:560px;overflow:hidden;background:url("../imagenes/tutorados/chats_tutor.png") center/100% 100% no-repeat}
+.pantalla{position:relative;width:100vw;height:100vh;min-width:900px;min-height:560px;overflow:hidden;background:url("../imagenes/tutorados/chats_tutor.png?v=2") center/100% 100% no-repeat}
 .zona{position:absolute;z-index:10;border:0;background:transparent;padding:0;cursor:pointer}
 .zona:focus-visible{outline:2px solid #0877ee;outline-offset:2px;border-radius:8px}
 
@@ -190,7 +190,7 @@ function leerSesion() {
 const usuario = leerSesion();
 
 if (!usuario) {
-  location.replace("../codigo principal/login.html");
+  location.replace("../codigo principal/login.html?v=2");
   throw new Error("No existe una sesión activa.");
 }
 
@@ -199,7 +199,7 @@ const usuarioId = String(usuario.matricula || "").trim();
 
 if (!usuarioId) {
   alert("Tu sesión no contiene una matrícula. Cierra sesión e inicia nuevamente.");
-  location.replace("../codigo principal/login.html");
+  location.replace("../codigo principal/login.html?v=2");
   throw new Error("La sesión no contiene matrícula.");
 }
 
@@ -1048,7 +1048,7 @@ $("cerrarSesion").addEventListener("click", () => {
   sessionStorage.removeItem("tipoUsuario");
   sessionStorage.removeItem("chatPendienteUV");
 
-  location.href = "../codigo principal/login.html";
+  location.href = "../codigo principal/login.html?v=2";
 });
 
 /* NAVEGACIÓN SEGÚN EL ROL (actualiza enlaces del menú lateral) */

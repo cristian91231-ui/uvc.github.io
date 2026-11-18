@@ -11,7 +11,7 @@
 
     .pantalla {
       position: relative; width: 100vw; height: 100vh; min-width: 1000px; min-height: 560px; overflow: hidden;
-      background: #f4faff url("../imagenes/estudiantes/calendario_estudiante.png") center/100% 100% no-repeat;
+      background: #f4faff url("../imagenes/estudiantes/calendario_estudiante.png?v=2") center/100% 100% no-repeat;
     }
 
     .zona { position: absolute; z-index: 20; display: block; border: 0; background: transparent; cursor: pointer; text-decoration: none; }
@@ -1119,7 +1119,7 @@
     $("cerrarSesion").addEventListener("click", () => {
       detenerEventos?.();
       ["usuarioUV", "perfilSeleccionadoUV", "tipoUsuario"].forEach(k => sessionStorage.removeItem(k));
-      window.location.href = "../codigo principal/login.html";
+      window.location.href = "../codigo principal/login.html?v=2";
     });
 
     document.addEventListener("click", e => {
