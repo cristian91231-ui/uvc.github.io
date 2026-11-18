@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selecciona tu perfil | UV</title>
+  <style>
+    /* Reinicio general de márgenes, rellenos y bordes */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* Cuerpo a pantalla completa con posición relativa para ubicar los botones encima */
+    body { width: 100vw; height: 100vh; overflow: hidden; position: relative; }
+
+    /* Imagen de fondo ajustada al 100% de ancho y alto para que no se recorte ni desfase los botones */
+    .fondo { width: 100%; height: 100%; object-fit: fill; display: block; pointer-events: none; }
+
+    /* Estilo base de los botones transparentes colocados sobre las tarjetas de la imagen */
+    .boton {
+      position: absolute; top: 44%; width: 24.5%; height: 51.5%;
+      border-radius: 25px; cursor: pointer; transition: background 0.2s, outline 0.2s;
+    }
+
+    /* Efecto visual suave al pasar el cursor sobre cualquiera de los dos botones */
+    .boton:hover { background: #ffffff15; outline: 2px solid #ffffff80; }
+
+    /* Posición horizontal exacta sobre la tarjeta de Tutor */
+    .tutor { left: 24.5%; }
+
+    /* Posición horizontal exacta sobre la tarjeta de Estudiante */
+    .estudiante { left: 51%; }
+
+    /* Ajuste adaptable para pantallas pequeñas (móviles) */
+    @media (max-width: 700px) {
+      .boton { width: 42%; height: 45%; }
+      .tutor { left: 5%; }
+      .estudiante { left: 53%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Imagen de fondo con las tarjetas de Tutor y Estudiante -->
+  <img src="/imagenes/principales/tutor-estudiante.png" class="fondo" alt="Perfil">
+
+  <!-- Botón transparente para elegir el rol de Tutor e ir al login -->
+  <a href="login.html" class="boton tutor" onclick="elegir('tutor')" aria-label="Entrar como Tutor" title="Tutor"></a>
+
+  <!-- Botón transparente para elegir el rol de Estudiante e ir al login -->
+  <a href="login.html" class="boton estudiante" onclick="elegir('estudiante')" aria-label="Entrar como Estudiante" title="Estudiante"></a>
+
+  <script>
+    // Función que guarda en la sesión del navegador si el usuario eligió 'tutor' o 'estudiante'
+    function elegir(tipo) {
+      sessionStorage.setItem("tipoUsuario", tipo); // Guarda el rol seleccionado en sessionStorage
+    }
+  </script>
+</body>
+</html>
