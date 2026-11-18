@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Literacidad Digital | Tutor UV</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;min-height:100%;font-family:Arial,sans-serif;background:#f4faff;overflow:hidden;}
+button,input,textarea{font:inherit;}
+.pantalla{position:relative;width:100vw;height:100vh;min-height:560px;background:url("../../imagenes/tutorados/materias/literacidad_digital_tutor.png") center / 100% 100% no-repeat;}
+/* Clase base para áreas y botones transparentes sobre los iconos del diseño */
+.zona{position:absolute;z-index:10;display:block;border:0;border-radius:8px;background:transparent;cursor:pointer;}
+.zona:hover{background:rgba(20,120,230,.10);}
+.zona:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid #1677e8;outline-offset:2px;}
+
+/* Botones del menú lateral izquierdo alineados con los 5 iconos del tutor */
+.nav-inicio{left:.4%;top:15.7%;width:10.2%;height:4.8%;}
+.nav-calendario{left:.4%;top:21.8%;width:10.2%;height:4.8%;}
+.nav-chats{left:.4%;top:28.2%;width:10.2%;height:4.8%;}
+.nav-perfil{left:.4%;top:34.4%;width:10.2%;height:4.8%;}
+.nav-config{left:.4%;top:40.8%;width:10.2%;height:4.8%;}
+
+/* Botón "< Volver al inicio" y controles superiores derechos (Notificaciones, Perfil y Menú) */
+.volver{left:12.8%;top:8.5%;width:13%;height:4.5%;}
+.notificaciones{left:85.0%;top:1.0%;width:3.4%;height:5.5%;}
+.perfil-foto{left:88.8%;top:.8%;width:3.6%;height:5.8%;border-radius:50%;}
+.info-usuario-top{position:absolute;z-index:15;left:92.6%;top:1.0%;width:4.0%;height:5.2%;display:flex;flex-direction:column;justify-content:center;overflow:visible;color:#14294e;pointer-events:none;line-height:1.05;}
+.info-usuario-top strong{display:block;max-width:100%;overflow-wrap:anywhere;font-size:clamp(8px,.72vw,12px);white-space:normal;}
+.info-usuario-top small{font-size:10px;color:#73849a;}
+.menu-flecha{left:96.5%;top:1.0%;width:2.8%;height:5.5%;display:flex;align-items:center;justify-content:center;color:transparent;font-size:0;}
+
+/* Paneles desplegables de usuario y notificaciones */
+.menu-usuario-panel{position:absolute;z-index:60;right:1.5%;top:7%;display:none;min-width:190px;padding:13px;border:1px solid #dce7f4;border-radius:11px;background:#fff;color:#17345e;box-shadow:0 10px 28px #0002;}
+.menu-usuario-panel.visible{display:block;}
+.menu-usuario-panel strong{display:block;max-width:260px;margin-bottom:3px;overflow-wrap:anywhere;font-size:13px;}
+.menu-usuario-panel small{display:block;margin-bottom:10px;color:#73849a;}
+.menu-usuario-panel button{width:100%;padding:9px 10px;border:0;border-radius:7px;background:#fff0f0;color:#b42318;cursor:pointer;text-align:left;font-weight:700;}
+.panel-notif{position:absolute;z-index:40;right:10%;top:7.5%;width:min(370px,85vw);max-height:480px;overflow-y:auto;display:none;border-radius:12px;background:#212121;color:#f1f1f1;box-shadow:0 10px 30px #0005;}
+.panel-notif.visible{display:block;}
+.notif-header{position:sticky;top:0;padding:16px;border-bottom:1px solid #3d3d3d;background:#212121;font-size:16px;font-weight:700;}
+.notif-item{display:flex;gap:12px;padding:14px 16px;border-bottom:1px solid #333;}
+.notif-avatar{display:grid;width:42px;height:42px;flex:0 0 42px;place-items:center;border-radius:50%;background:#0d8abc;color:white;}
+.notif-texto{flex:1;color:#ccc;font-size:13px;line-height:1.4;overflow-wrap:anywhere;}
+.notif-vacia{padding:25px;color:#999;text-align:center;font-size:13px;}
+.badge-notif{position:absolute;top:15%;right:15%;display:none;width:16px;height:16px;align-items:center;justify-content:center;border-radius:50%;background:#e53935;color:white;font-size:10px;font-weight:700;pointer-events:none;}
+
+/* Área de texto y botones para crear un aviso o publicación (Foto, GIF, Encuesta, Archivo, Publicar) */
+#textoPublicacion{position:absolute;z-index:8;left:22.0%;top:29.0%;width:43.5%;height:7.2%;resize:none;padding:8px;border:0;outline:0;background:transparent;color:#17345e;font:14px Arial,sans-serif;}
+#textoPublicacion:focus{border-radius:8px;background:rgba(255,255,255,.7);}
+#textoPublicacion::placeholder{color:#426b9a;font-weight:600;opacity:1;}
+.boton-foto{left:17.7%;top:37.1%;width:7.5%;height:5.8%;border-radius:10px;}
+.boton-gif{left:26.0%;top:37.1%;width:7.3%;height:5.8%;border-radius:10px;}
+.boton-encuesta{left:34.1%;top:37.1%;width:10.1%;height:5.8%;border-radius:10px;}
+.boton-archivo{left:45.0%;top:37.1%;width:9.4%;height:5.8%;border-radius:10px;}
+.boton-publicar{left:56.1%;top:37.0%;width:9.6%;height:6.0%;border-radius:10px;}
+.entrada-archivo{display:none;}
+.vista-previa{position:absolute;z-index:12;left:17.5%;top:42.5%;display:none;width:48%;max-height:130px;gap:10px;overflow:auto;padding:8px;border:1px solid #dce8f6;border-radius:9px;background:white;color:#173a63;font-size:12px;}
+.vista-previa.visible{display:flex;flex-wrap:wrap;}
+.previa-item{display:flex;align-items:center;gap:7px;max-width:100%;padding:5px 7px;border-radius:7px;background:#f3f7fc;}
+.previa-item span{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.previa-item button{border:0;background:transparent;color:#c62828;cursor:pointer;font-size:17px;}
+.publicaciones{position:absolute;z-index:5;left:16.7%;top:45%;width:50%;height:51%;overflow-y:auto;padding:5px 8px;}
+.publicacion{position:relative;margin-bottom:12px;padding:15px;border:1px solid #e0eaf5;border-radius:12px;background:rgba(255,255,255,.97);box-shadow:0 3px 12px rgba(25,75,125,.07);}
+.publicacion strong{color:#17345e;font-size:13px;}
+.publicacion p{margin-top:8px;color:#294767;font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;}
+.publicacion small{color:#8292a6;font-size:10px;}
+.publicacion a{display:block;margin-top:7px;color:#0877ee;font-size:12px;overflow-wrap:anywhere;}
+.publicacion-eliminar{position:absolute;top:9px;right:10px;padding:6px 9px;border:0;border-radius:6px;background:#fff2f2;color:#c62828;cursor:pointer;font-size:11px;}
+.publicacion-imagen{display:block;max-width:min(100%,360px);max-height:260px;margin-top:10px;border-radius:9px;object-fit:contain;}
+.dato{position:absolute;z-index:8;left:79.5%;display:flex;width:17.5%;height:2.9%;align-items:center;overflow:hidden;color:#172b52;font-size:clamp(10px,.8vw,14px);font-weight:700;text-overflow:ellipsis;white-space:nowrap;}
+#datoNrc{top:14.2%;}#datoAula{top:17.3%;}#datoEdificio{top:20.6%;}#datoProfesor{top:23.8%;}
+/* Botones de lápiz en la columna derecha para editar Información, Archivos y Asistencias */
+.editar-info{left:95.2%;top:10.5%;width:3.0%;height:4.2%;}
+.editar-archivos{left:95.2%;top:33.5%;width:3.0%;height:4.2%;}
+.editar-asistencias{left:95.2%;top:50.0%;width:3.0%;height:4.2%;}
+.lista{position:absolute;z-index:8;left:77.5%;display:flex;width:19.3%;flex-direction:column;gap:5px;overflow-y:auto;padding:4px;}
+#listaArchivos{top:34%;height:8.8%;}
+#listaAsistencias{top:51%;height:8.8%;align-items:center;justify-content:center;}
+.enlace-archivo,.elemento-asistencia{padding:6px;border-radius:7px;background:rgba(255,255,255,.92);color:#175fa9;font-size:11px;overflow-wrap:anywhere;text-decoration:none;}
+.elemento-asistencia{color:#243856;width:max-content;align-self:center;text-align:center;transform:translateY(12px);}
+.modal{position:fixed;z-index:100;inset:0;display:none;align-items:center;justify-content:center;padding:15px;background:rgba(0,15,40,.62);}
+.modal.visible{display:flex;}
+.modal-contenido{width:100%;max-width:460px;max-height:90vh;overflow-y:auto;padding:24px;border-radius:16px;background:white;box-shadow:0 10px 35px #0003;}
+.modal-contenido h2{margin-bottom:8px;color:#123f91;font-size:20px;}
+.modal-contenido p{color:#64748b;font-size:13px;line-height:1.5;}
+.modal-contenido label{display:block;margin:12px 0 5px;color:#294767;font-size:12px;font-weight:700;}
+.modal-contenido input,.modal-contenido textarea{width:100%;padding:11px;border:1px solid #d5e1ee;border-radius:8px;outline:0;color:#17345e;font:13px Arial,sans-serif;}
+.modal-contenido textarea{min-height:110px;resize:vertical;}
+.botones-modal{display:flex;gap:9px;margin-top:18px;}
+.botones-modal button{flex:1;min-height:40px;border:0;border-radius:8px;cursor:pointer;font-weight:700;}
+.btn-guardar{background:#0877ee;color:white;}
+.btn-cancelar{background:#e8edf3;color:#334155;}
+.lista-alumnos{display:flex;flex-direction:column;gap:8px;margin-top:15px;}
+.alumno-fila{display:flex;width:100%;align-items:center;justify-content:space-between;padding:13px;border:1px solid #dce8f6;border-radius:10px;background:#f8fbff;color:#17345e;cursor:pointer;text-align:left;}
+.alumno-nombre,.alumno-registro{font-weight:700;}
+.alumno-registro{color:#0877ee;}
+.opciones-editor{display:grid;gap:8px;margin-top:10px;}
+.opcion-editor{display:flex;gap:7px;}
+.opcion-editor input{flex:1;}
+.opcion-editor button{width:38px;border:0;border-radius:8px;background:#fff0f0;color:#c62828;cursor:pointer;}
+.btn-agregar-opcion{margin-top:10px;padding:8px 12px;border:1px solid #cbdced;border-radius:8px;background:#f4f8fd;color:#175fa9;cursor:pointer;}
+.mensaje{position:fixed;z-index:150;bottom:15px;left:50%;display:none;max-width:90%;transform:translateX(-50%);padding:12px 16px;border-radius:9px;background:#073967;color:white;font-size:13px;box-shadow:0 5px 18px #0002;}
+.mensaje.visible{display:block;}
+@media (max-width:800px){body{overflow:auto;}.pantalla{min-width:900px;min-height:650px;}}
+</style>
+</head>
+<body>
+<main class="pantalla" id="pantalla">
+<a class="zona volver" href="../pantalla_principal_tutor.html" aria-label="Volver al inicio"></a>
+<a class="zona nav-inicio" href="../pantalla_principal_tutor.html" aria-label="Inicio"></a>
+<a class="zona nav-calendario" href="../calendario_tutor.html" aria-label="Calendario"></a>
+<a class="zona nav-chats" href="../chats_tutor.html" aria-label="Chats"></a>
+<a class="zona nav-perfil" href="../perfil_tutor.html" aria-label="Perfil"></a>
+<a class="zona nav-config" href="../configuracion_tutor.html" aria-label="Configuración"></a>
+<button class="zona notificaciones" id="btnNotificaciones" aria-label="Ver notificaciones">
+<span class="badge-notif" id="badgeNotif">0</span>
+</button>
+<button class="zona perfil-foto" id="btnPerfilFoto" aria-label="Abrir perfil del tutor" title="Mi perfil"></button>
+<div class="info-usuario-top"><strong id="nombreTutor">Tutor</strong><small id="rolTutor">Tutor</small></div>
+<!-- Botón invisible sobre la flecha superior derecha para abrir el menú de usuario -->
+<button class="zona menu-flecha" id="menuFlecha" type="button" title="Menú de usuario" aria-label="Abrir menú de usuario" aria-haspopup="true" aria-expanded="false"></button>
+<div class="menu-usuario-panel" id="menuUsuarioPanel">
+<strong id="nombreTutorMenu">Tutor</strong>
+<small>Tutor</small>
+<button id="cerrarSesion" type="button">Cerrar sesión</button>
+</div>
+<div class="panel-notif" id="panelNotificaciones">
+<div class="notif-header">Notificaciones</div>
+<div id="listaNotificaciones"><div class="notif-vacia">Sin notificaciones.</div></div>
+</div>
+<textarea id="textoPublicacion" maxlength="1500" placeholder="💡 Escribe un aviso, comparte material o informa a tu grupo..."></textarea>
+<button class="zona boton-foto" id="btnFoto" aria-label="Adjuntar fotografía" title="Foto"></button>
+<button class="zona boton-gif" id="btnGif" aria-label="Adjuntar GIF" title="GIF"></button>
+<button class="zona boton-encuesta" id="btnEncuesta" aria-label="Crear encuesta" title="Encuesta"></button>
+<button class="zona boton-archivo" id="btnSubirArchivo" aria-label="Adjuntar archivo" title="Archivo"></button>
+<button class="zona boton-publicar" id="btnPublicar" aria-label="Publicar"></button>
+<input class="entrada-archivo" id="inputFoto" type="file" accept="image/png,image/jpeg,image/webp">
+<input class="entrada-archivo" id="inputGif" type="file" accept="image/gif">
+<input class="entrada-archivo" id="inputArchivo" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+<div class="vista-previa" id="vistaPrevia"></div>
+<section class="publicaciones" id="publicaciones" aria-live="polite"></section>
+<div class="dato" id="datoNrc"></div><div class="dato" id="datoAula"></div>
+<div class="dato" id="datoEdificio"></div><div class="dato" id="datoProfesor"></div>
+<button class="zona editar-info" id="btnEditarInfo" aria-label="Editar información de la materia"></button>
+<section class="lista" id="listaArchivos"></section>
+<button class="zona editar-archivos" id="btnEditarArchivos" aria-label="Editar archivos"></button>
+<section class="lista" id="listaAsistencias"></section>
+<button class="zona editar-asistencias" id="btnEditarAsistencias" aria-label="Editar asistencias"></button>
+<div class="mensaje" id="mensaje" role="status" aria-live="polite"></div>
+</main>
+<div class="modal" id="modalInfo"><div class="modal-contenido">
+<h2>Información de la materia</h2><p>Actualiza los datos de la materia.</p>
+<label for="inputNrc">NRC</label><input id="inputNrc" placeholder="Ej. 12345">
+<label for="inputAula">Aula</label><input id="inputAula" placeholder="Ej. Aula 16">
+<label for="inputEdificio">Edificio</label><input id="inputEdificio" placeholder="Ej. J-EDI2">
+<label for="inputProfesor">Profesor</label><input id="inputProfesor" placeholder="Nombre completo">
+<div class="botones-modal"><button class="btn-cancelar" data-cerrar="modalInfo">Cancelar</button><button class="btn-guardar" id="guardarInfo">Guardar cambios</button></div>
+</div></div>
+<div class="modal" id="modalArchivos"><div class="modal-contenido">
+<h2>Archivos de apoyo</h2><p>Agrega enlaces directos a documentos de apoyo. Escribe uno por línea con el formato: Nombre | https://enlace</p>
+<label for="inputListaArchivos">Enlaces</label><textarea id="inputListaArchivos" placeholder="Programa de la materia | https://..."></textarea>
+<div class="botones-modal"><button class="btn-cancelar" data-cerrar="modalArchivos">Cancelar</button><button class="btn-guardar" id="guardarArchivos">Guardar</button></div>
+</div></div>
+<div class="modal" id="modalAsistencias"><div class="modal-contenido">
+<h2>Asistencias del grupo</h2><p>Selecciona un estudiante con cuenta registrada para editar su registro de asistencias (asistencias / clases impartidas).</p>
+<div class="lista-alumnos" id="listaAlumnosTutor"></div>
+<div class="botones-modal"><button class="btn-cancelar" data-cerrar="modalAsistencias">Cerrar</button></div>
+</div></div>
+<div class="modal" id="modalEditarAlumno"><div class="modal-contenido">
+<h2>Editar asistencia</h2><h3 id="nombreAlumnoSeleccionado" style="color:#17345e;margin:10px 0"></h3>
+<label for="valorAsistenciaAlumno">Registro (ej. 10/20)</label><input id="valorAsistenciaAlumno" type="text" maxlength="10" placeholder="10/20">
+<div class="botones-modal"><button class="btn-cancelar" data-cerrar="modalEditarAlumno">Cancelar</button><button class="btn-guardar" id="guardarAsistenciaAlumno">Guardar</button></div>
+</div></div>
+<div class="modal" id="modalEncuesta"><div class="modal-contenido">
+<h2>Crear encuesta</h2><p>Escribe una pregunta y al menos dos opciones. Los alumnos podrán votar una sola vez por matrícula.</p>
+<label for="preguntaEncuesta">Pregunta</label><input id="preguntaEncuesta" maxlength="180" placeholder="¿Qué tema desean repasar?">
+<label>Opciones de respuesta</label><div class="opciones-editor" id="opcionesEditor"></div>
+<button class="btn-agregar-opcion" id="agregarOpcion" type="button">+ Agregar opción</button>
+<div class="botones-modal"><button class="btn-cancelar" data-cerrar="modalEncuesta">Cancelar</button><button class="btn-guardar" id="guardarEncuesta">Agregar encuesta</button></div>
+</div></div>
+
+<script type="module">
+import { db, storage } from "../../base%20de%20datos/firebase.js";
+import { getApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+import { collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
+import { getDatabase, ref as databaseRef, onValue } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js";
+
+const MATERIA_ID = "literacidad_digital", NOMBRE_MATERIA = "Literacidad Digital", MAX_ARCHIVO_MB = 10, MAX_ADJUNTOS = 5;
+const $ = id => document.getElementById(id);
+const refMateria = doc(db, "materias", MATERIA_ID);
+
+const appFirebase = getApp();
+const realtimeDb = getDatabase(appFirebase);
+const referenciaUsuarios = databaseRef(realtimeDb, "usuarios");
+
+let usuario = {};
+try { usuario = JSON.parse(sessionStorage.getItem("usuarioUV") || "{}"); } catch(e) {}
+
+const tutorId = String(usuario.matricula || usuario.correo || usuario.email || "tutor-demo").trim();
+const nombreTutorCompleto = String(usuario.nombre || usuario.nombreCompleto || usuario.correo || "Tutor").trim();
+const rolSesion = String(sessionStorage.getItem("tipoUsuario") || usuario.tipoUsuario || "Tutor");
+
+if (!usuario.matricula && !usuario.correo && !usuario.email) location.replace("../../codigo%20principal/login.html");
+
+let alumnos = [], datosMat = {}, archivosSel = [], alumnoSel = null, encuestaPendiente = null, timerMsg = null;
+
+const abrirModal = id => $(id).classList.add("visible");
+const cerrarModal = id => $(id).classList.remove("visible");
+
+const mostrarMensaje = texto => {
+    $("mensaje").textContent = texto;
+    $("mensaje").classList.add("visible");
+    clearTimeout(timerMsg);
+    timerMsg = setTimeout(() => $("mensaje").classList.remove("visible"), 3500);
+};
+
+const escaparNombreArchivo = nombre => nombre.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-100);
+const urlSegura = valor => {
+    try { const url = new URL(valor); return ["http:", "https:"].includes(url.protocol) ? url.href : null; } catch { return null; }
+};
+
+// Muestra el nombre y rol del tutor en la barra superior y en el menú desplegable
+$("nombreTutor").textContent = nombreTutorCompleto;
+$("nombreTutorMenu").textContent = nombreTutorCompleto;
+$("rolTutor").textContent = /estudiante/i.test(rolSesion) ? "Estudiante" : "Tutor";
+
+// Eventos de navegación del perfil, menú desplegable y botón de cerrar sesión
+$("btnPerfilFoto").onclick = () => window.location.href = "../perfil_tutor.html";
+$("menuFlecha").onclick = e => { e.stopPropagation(); $("menuFlecha").setAttribute("aria-expanded", String($("menuUsuarioPanel").classList.toggle("visible"))); };
+$("cerrarSesion").onclick = () => { sessionStorage.clear(); location.href = "../../codigo%20principal/login.html"; };
+
+// Cierra los paneles flotantes cuando se hace clic fuera de ellos
+document.onclick = e => {
+    if (!$("menuUsuarioPanel").contains(e.target) && e.target !== $("menuFlecha")) { $("menuUsuarioPanel").classList.remove("visible"); $("menuFlecha").setAttribute("aria-expanded", "false"); }
+    if (!$("panelNotificaciones").contains(e.target) && e.target !== $("btnNotificaciones")) $("panelNotificaciones").classList.remove("visible");
+};
+
+// Eventos de notificaciones, tecla Escape y botones para cerrar ventanas modales
+$("btnNotificaciones").onclick = e => { e.stopPropagation(); $("panelNotificaciones").classList.toggle("visible"); $("menuUsuarioPanel").classList.remove("visible"); };
+window.onkeydown = e => { if (e.key === "Escape") { document.querySelectorAll(".modal.visible").forEach(m => cerrarModal(m.id)); $("panelNotificaciones").classList.remove("visible"); $("menuUsuarioPanel").classList.remove("visible"); } };
+document.querySelectorAll("[data-cerrar]").forEach(b => b.onclick = () => cerrarModal(b.dataset.cerrar));
+
+// Eventos de los botones de edición (lápiz) y de adjuntar Foto, GIF, Archivo y Encuesta
+$("btnEditarInfo").onclick = () => abrirModal("modalInfo");
+$("btnEditarArchivos").onclick = () => { $("inputListaArchivos").value = (datosMat.archivos || []).map(a => `${a.nombre} | ${a.url}`).join("\n"); abrirModal("modalArchivos"); };
+$("btnEditarAsistencias").onclick = () => abrirModal("modalAsistencias");
+$("btnFoto").onclick = () => $("inputFoto").click();
+$("btnGif").onclick = () => $("inputGif").click();
+$("btnSubirArchivo").onclick = () => $("inputArchivo").click();
+$("btnEncuesta").onclick = () => { if (encuestaPendiente) return mostrarMensaje("Ya tienes una encuesta preparada."); prepararEditorEncuesta(); abrirModal("modalEncuesta"); };
+
+function prepararEditorEncuesta() { $("preguntaEncuesta").value = ""; $("opcionesEditor").innerHTML = ""; agregarCampoOpcion("Opción 1"); agregarCampoOpcion("Opción 2"); }
+function agregarCampoOpcion(valor = "") {
+    const contenedor = $("opcionesEditor");
+    if (contenedor.children.length >= 5) return mostrarMensaje("Máximo 5 opciones.");
+    const fila = document.createElement("div"); fila.className = "opcion-editor";
+    const campo = document.createElement("input"); campo.type = "text"; campo.maxLength = 100; campo.placeholder = "Opción"; campo.value = valor;
+    const quitar = document.createElement("button"); quitar.type = "button"; quitar.textContent = "×"; quitar.onclick = () => fila.remove();
+    fila.append(campo, quitar); contenedor.appendChild(fila);
+}
+$("agregarOpcion").onclick = () => agregarCampoOpcion();
+$("guardarEncuesta").onclick = () => {
+    const pregunta = $("preguntaEncuesta").value.trim();
+    const opciones = [...$("opcionesEditor").querySelectorAll("input")].map(i => i.value.trim()).filter(Boolean);
+    if (!pregunta || opciones.length < 2) return mostrarMensaje("Completa los datos de la encuesta.");
+    encuestaPendiente = { pregunta, opciones: opciones.map((texto, i) => ({ id: `op_${Date.now()}_${i}`, texto, votos: [] })) };
+    cerrarModal("modalEncuesta"); actualizarVistaPrevia();
+};
+
+function agregarAdjunto(archivo, categoria) {
+    if (!archivo || archivosSel.length >= MAX_ADJUNTOS || archivo.size > MAX_ARCHIVO_MB * 1024 * 1024) return;
+    archivosSel.push({ archivo, categoria, id: `${Date.now()}_${Math.random()}` });
+    actualizarVistaPrevia();
+}
+$("inputFoto").onchange = e => { agregarAdjunto(e.target.files?.[0], "foto"); e.target.value = ""; };
+$("inputGif").onchange = e => { agregarAdjunto(e.target.files?.[0], "gif"); e.target.value = ""; };
+$("inputArchivo").onchange = e => { agregarAdjunto(e.target.files?.[0], "archivo"); e.target.value = ""; };
+
+function actualizarVistaPrevia() {
+    const c = $("vistaPrevia"); c.replaceChildren();
+    if (!archivosSel.length && !encuestaPendiente) return c.classList.remove("visible");
+    archivosSel.forEach(item => {
+        const fila = document.createElement("div"); fila.className = "previa-item";
+        fila.innerHTML = `<span>${item.categoria === "foto" ? "🖼️" : item.categoria === "gif" ? "GIF" : "📄"} ${item.archivo.name}</span>`;
+        const btn = document.createElement("button"); btn.textContent = "×"; btn.onclick = () => { archivosSel = archivosSel.filter(a => a.id !== item.id); actualizarVistaPrevia(); };
+        fila.appendChild(btn); c.appendChild(fila);
+    });
+    if (encuestaPendiente) {
+        const fila = document.createElement("div"); fila.className = "previa-item";
+        fila.innerHTML = `<span>📊 Encuesta: ${encuestaPendiente.pregunta}</span>`;
+        const btn = document.createElement("button"); btn.textContent = "×"; btn.onclick = () => { encuestaPendiente = null; actualizarVistaPrevia(); };
+        fila.appendChild(btn); c.appendChild(fila);
+    }
+    c.classList.add("visible");
+}
+
+function renderizarInformacion() {
+    $("datoNrc").textContent = datosMat.nrc || ""; $("inputNrc").value = datosMat.nrc || "";
+    ["Aula", "Edificio", "Profesor"].forEach(campo => { $(`dato${campo}`).textContent = datosMat[campo.toLowerCase()] || ""; $(`input${campo}`).value = datosMat[campo.toLowerCase()] || ""; });
+    const lista = $("listaArchivos"); lista.replaceChildren();
+    (datosMat.archivos || []).forEach(a => {
+        const url = urlSegura(a.url); if (!url) return;
+        const enlace = document.createElement("a"); enlace.className = "enlace-archivo"; enlace.href = url; enlace.target = "_blank"; enlace.textContent = `📄 ${a.nombre}`;
+        lista.appendChild(enlace);
+    });
+    renderizarAsistencias();
+}
+
+function renderizarAsistencias() {
+    const registros = datosMat.asistenciasPorAlumno || {}, total = alumnos.length;
+    $("listaAsistencias").innerHTML = `<div class="elemento-asistencia"><b>${total}</b> alumnos con cuenta</div>`;
+    const lista = $("listaAlumnosTutor"); lista.replaceChildren();
+    alumnos.forEach(alumno => {
+        const reg = registros[alumno.id]?.registro || "0/0";
+        const btn = document.createElement("button"); btn.className = "alumno-fila";
+        btn.innerHTML = `<span class="alumno-nombre">${alumno.nombre}</span><span class="alumno-registro">${reg}</span><span>›</span>`;
+        btn.onclick = () => { alumnoSel = alumno; $("nombreAlumnoSeleccionado").textContent = alumno.nombre; $("valorAsistenciaAlumno").value = reg; abrirModal("modalEditarAlumno"); };
+        lista.appendChild(btn);
+    });
+}
+
+onValue(referenciaUsuarios, snapshot => {
+    const datos = snapshot.val() || {}, mapa = new Map();
+    Object.entries(datos).forEach(([uid, u]) => {
+        if (u && /estudiante|alumno/i.test(u.tipoUsuario || u.rol || "")) {
+            const m = String(u.matricula || uid).trim();
+            mapa.set(m, { id: m, uid, nombre: String(u.nombre || u.nombreCompleto || m).trim() });
+        }
+    });
+    alumnos = [...mapa.values()].sort((a,b) => a.nombre.localeCompare(b.nombre, "es"));
+    renderizarAsistencias();
+});
+
+onSnapshot(refMateria, snap => { datosMat = snap.exists() ? snap.data() : { materia: NOMBRE_MATERIA }; renderizarInformacion(); });
+
+$("guardarInfo").onclick = async () => {
+    await setDoc(refMateria, { materia: NOMBRE_MATERIA, nrc: $("inputNrc").value.trim(), aula: $("inputAula").value.trim(), edificio: $("inputEdificio").value.trim(), profesor: $("inputProfesor").value.trim() }, { merge: true });
+    cerrarModal("modalInfo"); mostrarMensaje("Información actualizada.");
+};
+
+$("guardarArchivos").onclick = async () => {
+    const manuales = $("inputListaArchivos").value.split("\n").map(l => l.trim()).filter(Boolean).map(l => {
+        const [nombre, url] = l.split("|").map(s => s.trim());
+        return nombre && urlSegura(url) ? { nombre, url } : null;
+    }).filter(Boolean);
+    await setDoc(refMateria, { archivos: manuales }, { merge: true });
+    cerrarModal("modalArchivos"); mostrarMensaje("Archivos guardados.");
+};
+
+$("guardarAsistenciaAlumno").onclick = async () => {
+    if (!alumnoSel) return;
+    const m = $("valorAsistenciaAlumno").value.trim().match(/^(\d+)\s*\/\s*(\d+)$/);
+    if (!m) return mostrarMensaje("Formato inválido (ej. 10/20).");
+    await runTransaction(db, async trans => {
+        const docSnap = await trans.get(refMateria);
+        const actual = docSnap.exists() ? (docSnap.data().asistenciasPorAlumno || {}) : {};
+        trans.set(refMateria, { materia: NOMBRE_MATERIA, asistenciasPorAlumno: { ...actual, [alumnoSel.id]: { nombre: alumnoSel.nombre, registro: `${m[1]}/${m[2]}` } } }, { merge: true });
+    });
+    cerrarModal("modalEditarAlumno"); mostrarMensaje("Asistencia guardada.");
+};
+
+$("btnPublicar").onclick = async () => {
+    const contenido = $("textoPublicacion").value.trim();
+    if (!contenido && !archivosSel.length && !encuestaPendiente) return;
+    const adjuntos = [];
+    for (let i = 0; i < archivosSel.length; i++) {
+        const item = archivosSel[i];
+        const r = ref(storage, `avisos/${MATERIA_ID}/${Date.now()}_${i}_${escaparNombreArchivo(item.archivo.name)}`);
+        await uploadBytes(r, item.archivo);
+        adjuntos.push({ nombre: item.archivo.name, url: await getDownloadURL(r), tipo: item.archivo.type, categoria: item.categoria });
+    }
+    const pub = { materiaId: MATERIA_ID, materia: NOMBRE_MATERIA, contenido, autorNombre: usuario.nombre || "Tutor", autorMatricula: String(usuario.matricula || tutorId), archivos: adjuntos, fecha: serverTimestamp() };
+    if (encuestaPendiente) pub.encuesta = encuestaPendiente;
+    await addDoc(collection(db, "avisos"), pub);
+    $("textoPublicacion").value = ""; archivosSel = []; encuestaPendiente = null; actualizarVistaPrevia(); mostrarMensaje("¡Publicado!");
+};
+
+onSnapshot(query(collection(db, "avisos"), where("materiaId", "==", MATERIA_ID)), snap => {
+    const pubs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.fecha?.toMillis?.() || 0) - (a.fecha?.toMillis?.() || 0));
+    const container = $("publicaciones"); container.replaceChildren();
+    pubs.forEach(p => {
+        const art = document.createElement("article"); art.className = "publicacion";
+        art.innerHTML = `<strong>${p.autorNombre || "Tutor"}</strong><small> · ${p.fecha?.toDate?.()?.toLocaleString("es-MX") || "Reciente"}</small>${p.contenido ? `<p>${p.contenido}</p>` : ""}`;
+        if (p.autorMatricula === String(usuario.matricula || tutorId)) {
+            const del = document.createElement("button"); del.className = "publicacion-eliminar"; del.textContent = "Eliminar";
+            del.onclick = async () => { if (confirm("¿Eliminar aviso?")) await deleteDoc(doc(db, "avisos", p.id)); };
+            art.appendChild(del);
+        }
+        (p.archivos || []).forEach(a => {
+            if ((a.tipo || "").startsWith("image/")) art.innerHTML += `<img class="publicacion-imagen" src="${a.url}" alt="imagen">`;
+            else art.innerHTML += `<a href="${a.url}" target="_blank">📄 ${a.nombre}</a>`;
+        });
+        container.appendChild(art);
+    });
+});
+</script>
+</body>
+</html>

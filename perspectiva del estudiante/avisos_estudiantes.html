@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avisos | Foro UV</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; min-height: 100%; font-family: Arial, Helvetica, sans-serif; }
+    body { overflow: hidden; background: #f4faff; }
+
+    .pantalla {
+      position: relative; width: 100vw; height: 100vh; min-height: 500px; overflow: hidden;
+      background: url("../imagenes/estudiantes/avisos.png") center/100% 100% no-repeat;
+    }
+
+    /* Indicador lateral */
+    .seleccion {
+      position: absolute; z-index: 2; left: 1.1%; top: 22.9%; width: 9%; height: 4.9%;
+      border-radius: 11px; background: transparent; pointer-events: none; transition: top .18s ease;
+    }
+
+    .zona { position: absolute; z-index: 5; display: block; padding: 0; border: 0; background: transparent; cursor: pointer; }
+    .zona:focus-visible { outline: 2px solid #1677e8; outline-offset: -3px; border-radius: 12px; }
+
+    /* Tarjetas de materias */
+    .materia {
+      position: absolute; z-index: 12; pointer-events: auto; padding: 0; border: 0;
+      border-radius: 15px; background: transparent; cursor: pointer; transition: background .16s, box-shadow .16s;
+    }
+    .materia:hover, .materia:focus-visible {
+      background: rgba(255, 255, 255, .12);
+      box-shadow: inset 0 0 0 2px rgba(33, 117, 224, .45);
+      outline: none;
+    }
+    #materiaPensamiento  { left: 13.05%; top: 27.45%; width: 28.15%; height: 12%; }
+    #materiaProgramacion { left: 42.15%; top: 27.45%; width: 26.85%; height: 12%; }
+    #materiaLogica       { left: 69.65%; top: 27.45%; width: 28.30%; height: 12%; }
+    #materiaAlgebra      { left: 13.05%; top: 41.25%; width: 28.15%; height: 12%; }
+    #materiaFundamentos  { left: 42.15%; top: 41.25%; width: 26.85%; height: 12%; }
+    #materiaLiteracidad  { left: 69.65%; top: 41.25%; width: 28.30%; height: 12%; }
+
+    /* Buscador y sugerencias */
+    .busqueda {
+      position: absolute; z-index: 15; left: 12.75%; top: 1.55%; width: 51.2%; height: 4.25%;
+      padding: 0 14px 0 38px; border: none; border-radius: 12px; outline: none;
+      background: transparent; color: #14294e; font: 600 13px Arial, sans-serif;
+    }
+    .busqueda::placeholder { color: transparent; }
+    .busqueda:focus { background: rgba(238, 246, 255, .98); box-shadow: 0 0 0 2px #b9d9fb; }
+    .busqueda:focus::placeholder { color: #73849a; }
+
+    .sugerencias {
+      position: absolute; z-index: 30; left: 12.75%; top: 6.3%; width: min(51.2%, 700px);
+      max-height: 260px; overflow-y: auto; display: none; padding: 6px;
+      border: 1px solid #dce8f6; border-radius: 12px; background: #fff;
+      box-shadow: 0 8px 25px rgba(24, 65, 110, .14);
+    }
+    .sugerencias.visible, .panel-notificaciones.visible, .perfil-menu.visible, .mensaje.visible { display: block; }
+    .sugerencia {
+      display: flex; flex-direction: column; width: 100%; gap: 4px; padding: 11px 12px;
+      border: 0; border-radius: 8px; background: #fff; text-align: left; color: #11284e; cursor: pointer;
+    }
+    .sugerencia:hover, .sugerencia:focus-visible { background: #edf6ff; outline: none; }
+    .sugerencia small { color: #6c809a; }
+
+    /* Botones del menú lateral izquierdo alineados con cada icono del diseño */
+    .nav-inicio     { left: .4%; top: 15.7%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-avisos     { left: .4%; top: 21.1%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-calendario { left: .4%; top: 26.4%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-chats      { left: .4%; top: 31.4%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-perfil     { left: .4%; top: 37.0%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-config     { left: .4%; top: 41.7%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-inicio:hover, .nav-avisos:hover, .nav-calendario:hover, .nav-chats:hover, .nav-perfil:hover, .nav-config:hover {
+      background: rgba(255, 255, 255, .10);
+    }
+
+    /* Botones de la cabecera superior derecha (Notificaciones, Foto de perfil y Menú) */
+    .notificaciones { left: 84.6%; top: .6%;  width: 3.6%; height: 5.8%; z-index: 100; border-radius: 8px; }
+    .perfil         { left: 88.6%; top: .6%;  width: 3.6%; height: 5.8%; z-index: 90;  border-radius: 50%; }
+    .menu-usuario   { left: 96.3%; top: .6%;  width: 3.0%; height: 5.8%; z-index: 110; border-radius: 8px; }
+    .menu-usuario:hover, .notificaciones:hover, .perfil:hover { background: rgba(20, 120, 230, .08); }
+
+    .info-usuario-top {
+      position: absolute; z-index: 60; left: 91.9%; top: .55%; width: 4.45%; height: 6.1%; min-width: 54px;
+      display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 3px;
+      padding: 2px 4px; border-radius: 5px; background: rgba(255, 255, 255, .42); color: #102b59;
+      pointer-events: none; text-shadow: 0 1px 2px rgba(255, 255, 255, .95);
+    }
+    .info-usuario-top strong {
+      display: block; width: 100%; font-size: clamp(10px, .9vw, 14px); font-weight: 700;
+      line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .info-usuario-top small { display: block; width: 100%; font-size: clamp(9px, .72vw, 12px); line-height: 1.1; color: #526985; white-space: nowrap; }
+
+    .badge-notificaciones {
+      position: absolute; z-index: 115; left: 86.6%; top: .7%; min-width: 17px; height: 17px;
+      padding: 0 4px; border-radius: 20px; background: #e53935; color: #fff; font-size: 10px;
+      font-weight: bold; display: none; align-items: center; justify-content: center; pointer-events: none;
+    }
+    .badge-notificaciones.visible { display: flex; }
+
+    /* Panel de notificaciones */
+    .panel-notificaciones {
+      position: absolute; z-index: 120; right: 8%; top: 7.5%; width: min(360px, 35vw);
+      max-height: 55vh; overflow-y: auto; display: none; border: 1px solid #dce8f6;
+      border-radius: 12px; background: #fff; color: #173a63; box-shadow: 0 8px 25px rgba(24, 65, 110, .18);
+    }
+    .panel-notificaciones h3 { position: sticky; top: 0; margin: 0; padding: 13px 15px; border-bottom: 1px solid #e5edf7; background: #fff; font-size: 14px; }
+    .notificacion-chat {
+      display: block; width: 100%; padding: 12px 14px; border: 0; border-bottom: 1px solid #edf2f8;
+      background: #fff; color: #17345e; text-align: left; cursor: pointer;
+    }
+    .notificacion-chat:hover { background: #eef6ff; }
+    .notificacion-chat strong { display: block; margin-bottom: 4px; font-size: 12px; }
+    .notificacion-chat span { display: block; color: #607391; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .notificacion-vacia { padding: 18px; color: #71819a; font-size: 12px; text-align: center; }
+
+    /* Menú desplegable de perfil */
+    .perfil-menu {
+      position: absolute; z-index: 130; right: 1.5%; top: 7.5%; display: none; width: 236px; min-width: 236px;
+      padding: 16px 23px 17px; border: 1px solid #e1eaf4; border-radius: 15px; background: #fff;
+      box-shadow: 0 8px 25px rgba(24, 65, 110, .14); color: #173a63; font-size: 16px;
+    }
+    .perfil-menu strong { display: block; margin: 0 0 12px; color: #111; font-size: 19px; font-weight: 700; line-height: 24px; }
+    .perfil-menu button {
+      display: block; width: 100%; min-height: 42px; padding: 8px 0; border: 0;
+      background: transparent; color: #264e78; text-align: left; font: 400 16px Arial, Helvetica, sans-serif; cursor: pointer;
+    }
+    .perfil-menu button:hover { color: #0877ee; text-decoration: underline; }
+
+    /* Notificación flotante (Toast) */
+    .mensaje {
+      position: absolute; z-index: 150; left: 50%; bottom: 20px; transform: translateX(-50%);
+      max-width: min(90vw, 520px); display: none; padding: 12px 17px; border-radius: 10px;
+      background: #073967; color: #fff; box-shadow: 0 6px 20px rgba(0, 0, 0, .16); font-size: 13px;
+    }
+
+    /* Modal de avisos */
+    .modal {
+      position: absolute; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center;
+      padding: 24px; background: rgba(11, 35, 66, .38);
+    }
+    .modal.visible { display: flex; }
+    .modal-contenido {
+      width: min(760px, 95%); max-height: 85%; display: flex; flex-direction: column; overflow: hidden;
+      border: 1px solid #dce8f6; border-radius: 18px; background: #fff; box-shadow: 0 18px 55px rgba(12, 41, 78, .23);
+    }
+    .modal-cabecera { display: flex; align-items: center; gap: 12px; padding: 20px 22px; border-bottom: 1px solid #e4edf7; }
+    .modal-titulo { flex: 1; min-width: 0; }
+    .modal-titulo h2 { margin: 0; color: #14294e; font-size: 21px; }
+    .modal-titulo p { margin: 5px 0 0; color: #71839a; font-size: 13px; }
+    .cerrar-modal {
+      width: 38px; height: 38px; flex: 0 0 auto; border: 0; border-radius: 10px;
+      background: #eff6fd; color: #173a63; font-size: 22px; cursor: pointer;
+    }
+    .cerrar-modal:hover { background: #e0eeff; }
+    .modal-lista { display: flex; flex-direction: column; gap: 10px; padding: 18px 22px 22px; overflow-y: auto; }
+    .aviso-item {
+      display: block; width: 100%; padding: 15px; border: 1px solid #e0eaf5; border-radius: 12px;
+      background: #fbfdff; color: #173257; text-align: left; cursor: pointer;
+    }
+    .aviso-item:hover { border-color: #92c5f7; background: #f1f8ff; }
+    .aviso-item strong { display: block; margin-bottom: 6px; font-size: 15px; }
+    .aviso-item p { margin: 0; color: #596f8b; font-size: 13px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .aviso-item small { display: block; margin-top: 8px; color: #7489a3; }
+    .estado-lista { padding: 26px 12px; text-align: center; color: #637a95; font-size: 14px; }
+
+    /* Responsivo */
+    @media (max-width: 700px) {
+      .info-usuario-top { left: 91%; width: 5%; min-width: 48px; }
+      .panel-notificaciones { right: 3%; width: min(360px, 94vw); }
+      .perfil-menu { right: 3%; }
+      .busqueda { font-size: 10px; padding-left: 24px; }
+      .modal { padding: 10px; }
+      .modal-contenido { width: 100%; max-height: 90%; }
+      .modal-cabecera { padding: 14px; }
+      .modal-lista { padding: 12px; }
+      .modal-titulo h2 { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="pantalla" id="pantalla">
+    <div class="seleccion" id="seleccion" aria-hidden="true"></div>
+
+    <!-- Buscador -->
+    <input class="busqueda" id="buscarMateria" type="search" placeholder="Buscar avisos o materias..." autocomplete="off" aria-label="Buscar avisos o materias">
+    <div class="sugerencias" id="sugerencias" role="listbox" aria-label="Materias encontradas"></div>
+
+    <!-- Tarjetas de materias -->
+    <button class="materia" id="materiaPensamiento"  data-ruta="materias/pensamiento_critico_estudiante.html"                   data-materia="Pensamiento Crítico"                   aria-label="Consultar avisos de Pensamiento Crítico"></button>
+    <button class="materia" id="materiaProgramacion" data-ruta="materias/metodologia_de_la_programación_estudiante.html"      data-materia="Metodología de la Programación"        aria-label="Consultar avisos de Metodología de la Programación"></button>
+    <button class="materia" id="materiaLogica"       data-ruta="materias/logica_estudiante.html"                                data-materia="Lógica"                                aria-label="Consultar avisos de Lógica"></button>
+    <button class="materia" id="materiaAlgebra"      data-ruta="materias/algebra_lineal_estudiante.html"                        data-materia="Álgebra Lineal"                        aria-label="Consultar avisos de Álgebra Lineal"></button>
+    <button class="materia" id="materiaFundamentos"  data-ruta="materias/fundamentos_de_la_ingeneria_de_software_estudiantes.html" data-materia="Fundamentos de Ingeniería de Software" aria-label="Consultar avisos de Fundamentos de Ingeniería de Software"></button>
+    <button class="materia" id="materiaLiteracidad"  data-ruta="materias/literacidad_digital_estudiante.html"                   data-materia="Literacidad Digital"                   aria-label="Consultar avisos de Literacidad Digital"></button>
+
+    <!-- Menú lateral: seis opciones -->
+    <a class="zona nav-inicio"     data-seccion="Inicio"        href="pantalla_principal.html"        aria-label="Inicio"></a>
+    <a class="zona nav-avisos"     data-seccion="Avisos"        href="avisos_estudiantes.html"        aria-current="page" aria-label="Avisos"></a>
+    <a class="zona nav-calendario" data-seccion="Calendario"    href="calendario_estudiante.html"    aria-label="Calendario"></a>
+    <a class="zona nav-chats"      data-seccion="Chats"         href="chats_estudiantes.html"         aria-label="Chats"></a>
+    <a class="zona nav-perfil"     data-seccion="Perfil"        href="perfil_estudiantes.html"        aria-label="Perfil"></a>
+    <a class="zona nav-config"     data-seccion="Configuración" href="configuracion_estudiante.html" aria-label="Configuración"></a>
+
+    <!-- Cabecera superior derecha: Notificaciones, Perfil y Menú desplegable -->
+    <button class="zona notificaciones" id="notificaciones" type="button" aria-label="Notificaciones" aria-expanded="false" aria-controls="panelNotificaciones"></button>
+    <span class="badge-notificaciones" id="badgeNotificaciones" aria-live="polite"></span>
+
+    <a class="zona perfil" id="perfil" href="perfil_estudiantes.html" aria-label="Ir al perfil del estudiante"></a>
+    <div class="info-usuario-top">
+      <strong id="nombreEstudianteTop">Estudiante</strong>
+      <small id="rolEstudianteTop">Estudiante</small>
+    </div>
+
+    <button class="zona menu-usuario" id="menuUsuario" type="button" aria-label="Menú de usuario" aria-expanded="false" aria-controls="perfilMenu"></button>
+
+    <!-- Panel de notificaciones -->
+    <div class="panel-notificaciones" id="panelNotificaciones" aria-label="Notificaciones del estudiante">
+      <h3>Mensajes sin leer</h3>
+      <div id="listaNotificaciones">
+        <div class="notificacion-vacia">Cargando notificaciones...</div>
+      </div>
+    </div>
+
+    <!-- Menú desplegable del estudiante -->
+    <div class="perfil-menu" id="perfilMenu">
+      <strong id="nombreEstudiante">Estudiante</strong>
+      <button type="button" id="abrirMiPerfil">Mi perfil</button>
+      <button type="button" id="cerrarSesion" class="cerrar-sesion">Cerrar sesión</button>
+    </div>
+
+    <!-- Modal de avisos -->
+    <section class="modal" id="modalAvisos" role="dialog" aria-modal="true" aria-labelledby="tituloModal">
+      <div class="modal-contenido">
+        <header class="modal-cabecera">
+          <div class="modal-titulo">
+            <h2 id="tituloModal">Avisos de la materia</h2>
+            <p id="subtituloModal">Consulta los avisos publicados por tu tutor.</p>
+          </div>
+          <button class="cerrar-modal" id="cerrarModal" type="button" aria-label="Cerrar avisos">×</button>
+        </header>
+        <div class="modal-lista" id="listaAvisos" aria-live="polite">
+          <div class="estado-lista">Selecciona una materia para consultar sus avisos.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="mensaje" id="mensaje" role="status" aria-live="polite"></div>
+  </main>
+
+  <script type="module">
+    import { db } from "../base%20de%20datos/firebase.js";
+    import { collection, getDocs, onSnapshot, query, where } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+
+    const $ = id => document.getElementById(id);
+
+    const MATERIAS = [
+      { nombre: "Pensamiento Crítico",                   nrc: "24143", aula: "Aula 16",    boton: "materiaPensamiento",  ruta: "materias/pensamiento_critico_estudiante.html" },
+      { nombre: "Metodología de la Programación",        nrc: "23099", aula: "Aula 16",    boton: "materiaProgramacion", ruta: "materias/metodologia_de_la_programación_estudiante.html" },
+      { nombre: "Lógica",                                nrc: "24142", aula: "Aula 16",    boton: "materiaLogica",       ruta: "materias/logica_estudiante.html" },
+      { nombre: "Álgebra Lineal",                        nrc: "24141", aula: "Aula 16",    boton: "materiaAlgebra",      ruta: "materias/algebra_lineal_estudiante.html" },
+      { nombre: "Fundamentos de Ingeniería de Software", nrc: "24140", aula: "Aula 16",    boton: "materiaFundamentos",  ruta: "materias/fundamentos_de_la_ingeneria_de_software_estudiantes.html" },
+      { nombre: "Literacidad Digital",                   nrc: "24144", aula: "CENT. COM1", boton: "materiaLiteracidad",  ruta: "materias/literacidad_digital_estudiante.html" }
+    ];
+
+    const POSICIONES_MENU = {
+      Inicio: "16.7%",
+      Avisos: "22.9%",
+      Calendario: "29%",
+      Chats: "35.2%",
+      Perfil: "41.4%",
+      "Configuración": "47.6%"
+    };
+
+    let avisosEnMemoria = null;
+    let temporizadorMensaje = null;
+    let detenerNotificaciones = null;
+
+    // --- Utilidades generales ---
+    function crearNodo(tag, props = {}, hijos = []) {
+      const el = document.createElement(tag);
+      Object.assign(el, props);
+      hijos.forEach(h => el.append(h));
+      return el;
+    }
+
+    function mostrarMensaje(texto) {
+      const el = $("mensaje");
+      el.textContent = texto;
+      el.classList.add("visible");
+      clearTimeout(temporizadorMensaje);
+      temporizadorMensaje = setTimeout(() => el.classList.remove("visible"), 2800);
+    }
+
+    function normalizar(texto) {
+      return String(texto || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase("es");
+    }
+
+    function obtenerCampo(objeto, campos) {
+      for (const campo of campos) {
+        const valor = objeto?.[campo];
+        if (valor !== undefined && valor !== null && String(valor).trim() !== "") return valor;
+      }
+      return "";
+    }
+
+    function obtenerTimestamp(valor) {
+      if (!valor) return 0;
+      if (typeof valor.toMillis === "function") return valor.toMillis();
+      if (typeof valor.toDate === "function") return valor.toDate().getTime();
+      const ms = new Date(valor).getTime();
+      return Number.isNaN(ms) ? 0 : ms;
+    }
+
+    // --- Sesión y sincronización de nombre ---
+    function obtenerUsuarioActual() {
+      try {
+        return JSON.parse(sessionStorage.getItem("usuarioUV") || "null");
+      } catch (err) {
+        console.error("No se pudo leer usuarioUV:", err);
+        return null;
+      }
+    }
+
+    const usuarioActual = obtenerUsuarioActual();
+    const matriculaEstudiante = String(usuarioActual?.matricula || "").trim();
+    const correoEstudiante = String(usuarioActual?.correo || usuarioActual?.email || "").trim();
+
+    function elegirNombre(datos) {
+      const candidatos = [datos?.nombre, datos?.nombreCompleto, datos?.nombres, datos?.nombrePerfil, datos?.displayName, datos?.correo, datos?.email];
+      const hallado = candidatos.find(v => typeof v === "string" && v.trim() && !v.includes("@"));
+      if (hallado) return hallado.trim();
+
+      const mail = String(datos?.correo || datos?.email || "").trim();
+      return mail.includes("@") ? mail.split("@")[0] : "Estudiante";
+    }
+
+    function mostrarNombreEstudiante(datos) {
+      const completo = elegirNombre(datos);
+      $("nombreEstudianteTop").textContent = completo.split(/\s+/)[0] || "Estudiante";
+      $("nombreEstudiante").textContent = completo;
+      $("rolEstudianteTop").textContent = "Estudiante";
+    }
+
+    if (usuarioActual) {
+      mostrarNombreEstudiante(usuarioActual);
+      sincronizarNombreDesdeFirestore();
+    }
+
+    async function sincronizarNombreDesdeFirestore() {
+      if (!matriculaEstudiante) return;
+      try {
+        const snap = await getDocs(query(collection(db, "usuarios"), where("matricula", "==", matriculaEstudiante)));
+        if (snap.empty) return;
+
+        const datosNube = snap.docs[0].data();
+        const nombreNube = elegirNombre(datosNube);
+
+        if (nombreNube !== "Estudiante" && !nombreNube.includes("@")) {
+          mostrarNombreEstudiante(datosNube);
+          const nombreFinal = datosNube.nombre || datosNube.nombreCompleto || datosNube.nombres || datosNube.nombrePerfil || nombreNube;
+
+          sessionStorage.setItem("usuarioUV", JSON.stringify({
+            ...usuarioActual,
+            nombre: nombreFinal,
+            nombreCompleto: datosNube.nombreCompleto || nombreFinal,
+            nombres: datosNube.nombres || nombreFinal,
+            matricula: datosNube.matricula || matriculaEstudiante,
+            correo: datosNube.correo || datosNube.email || correoEstudiante,
+            campus: datosNube.campus || usuarioActual?.campus || "",
+            tipoUsuario: datosNube.tipoUsuario || usuarioActual?.tipoUsuario || "Estudiante"
+          }));
+        }
+      } catch (err) {
+        console.warn("No se pudo recuperar el nombre desde Firestore:", err);
+      }
+    }
+
+    // --- Navegación directa a materias ---
+    function irAMateria(materia) {
+      if (!materia?.ruta) {
+        mostrarMensaje("No se encontró la pantalla de esta materia.");
+        return;
+      }
+      try {
+        const destino = new URL(materia.ruta, window.location.href);
+        window.location.assign(destino.href);
+      } catch (err) {
+        console.error("No se pudo abrir la materia:", materia.nombre, err);
+        mostrarMensaje(`No se pudo abrir la pantalla de ${materia.nombre}. Revisa que el archivo exista dentro de la carpeta materias.`);
+      }
+    }
+
+    document.querySelectorAll(".materia[data-ruta]").forEach(boton => {
+      boton.addEventListener("click", e => {
+        e.preventDefault();
+        const ruta = boton.dataset.ruta;
+        if (ruta) window.location.assign(new URL(ruta, window.location.href).href);
+      });
+    });
+
+    // --- Buscador y sugerencias ---
+    const busqueda = $("buscarMateria");
+    const sugerencias = $("sugerencias");
+
+    function limpiarBusqueda() {
+      sugerencias.classList.remove("visible");
+      busqueda.value = "";
+      MATERIAS.forEach(m => $(m.boton).style.display = "block");
+    }
+
+    function renderizarSugerencias(consulta) {
+      sugerencias.replaceChildren();
+      const texto = normalizar(consulta);
+
+      MATERIAS.forEach(m => {
+        const coincide = !texto || normalizar(m.nombre).includes(texto) || normalizar(m.nrc).includes(texto);
+        $(m.boton).style.display = coincide ? "block" : "none";
+      });
+
+      if (!texto) {
+        sugerencias.classList.remove("visible");
+        return;
+      }
+
+      const coincidencias = MATERIAS.filter(m => normalizar(m.nombre).includes(texto) || normalizar(m.nrc).includes(texto));
+      if (!coincidencias.length) {
+        sugerencias.classList.remove("visible");
+        return;
+      }
+
+      coincidencias.forEach(m => {
+        const btn = crearNodo("button", { type: "button", className: "sugerencia" }, [
+          crearNodo("strong", { textContent: m.nombre }),
+          crearNodo("small", { textContent: `NRC: ${m.nrc} · ${m.aula}` })
+        ]);
+        btn.addEventListener("mousedown", e => e.preventDefault());
+        btn.addEventListener("click", () => {
+          limpiarBusqueda();
+          irAMateria(m);
+        });
+        sugerencias.appendChild(btn);
+      });
+
+      sugerencias.classList.add("visible");
+    }
+
+    busqueda.addEventListener("input", () => renderizarSugerencias(busqueda.value));
+
+    busqueda.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        limpiarBusqueda();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        const consulta = normalizar(busqueda.value);
+        if (!consulta) return;
+
+        const coincidencias = MATERIAS.filter(m => normalizar(m.nombre).includes(consulta) || normalizar(m.nrc) === consulta);
+        if (coincidencias.length === 1) {
+          limpiarBusqueda();
+          irAMateria(coincidencias[0]);
+        } else if (coincidencias.length > 1) {
+          sugerencias.classList.add("visible");
+        } else {
+          mostrarMensaje("No se encontró una materia con ese nombre o NRC.");
+        }
+      }
+    });
+
+    // --- Lógica del Modal de Avisos ---
+    function esDeLaMateria(aviso, materia) {
+      const info = aviso.materiaInfo || aviso.informacionMateria || aviso.materiaDatos || {};
+      const nombreAviso = normalizar(
+        obtenerCampo(aviso, ["materia", "asignatura", "materiaNombre", "nombreMateria", "tituloMateria"]) ||
+        obtenerCampo(info, ["materia", "asignatura", "materiaNombre", "nombre", "titulo"])
+      );
+      const nrcAviso = normalizar(obtenerCampo(aviso, ["nrc", "NRC"]) || obtenerCampo(info, ["nrc", "NRC"]));
+      const idMateria = normalizar(obtenerCampo(aviso, ["materiaId", "asignaturaId", "idMateria"]));
+
+      const nombreBuscado = normalizar(materia.nombre);
+      const nrcBuscado = normalizar(materia.nrc);
+
+      return (nombreAviso && nombreAviso === nombreBuscado) ||
+             (nrcAviso && nrcAviso === nrcBuscado) ||
+             Boolean(idMateria && (idMateria === nrcBuscado || idMateria === nombreBuscado));
+    }
+
+    function crearElementoAviso(aviso) {
+      const texto = String(obtenerCampo(aviso, ["contenido", "descripcion", "texto", "mensaje", "detalle"]) || "");
+      const fechaRaw = aviso.fechaPublicacion || aviso.fechaCreacion || aviso.fecha || aviso.createdAt || aviso.timestamp;
+      const ms = obtenerTimestamp(fechaRaw);
+
+      const hijos = [
+        crearNodo("strong", { textContent: String(obtenerCampo(aviso, ["titulo", "tituloAviso", "asunto", "nombre", "tema"]) || "Aviso del tutor") }),
+        crearNodo("p", { textContent: texto.length > 280 ? texto.slice(0, 280) + "…" : texto })
+      ];
+
+      if (ms > 0) {
+        hijos.push(crearNodo("small", { textContent: `Publicado: ${new Date(ms).toLocaleDateString("es-MX")}` }));
+      }
+
+      const boton = crearNodo("button", { type: "button", className: "aviso-item" }, hijos);
+      boton.addEventListener("click", () => {
+        window.location.href = `detalle-aviso.html?id=${encodeURIComponent(aviso.id)}`;
+      });
+      return boton;
+    }
+
+    async function abrirMateria(materia) {
+      $("tituloModal").textContent = materia.nombre;
+      $("subtituloModal").textContent = `NRC: ${materia.nrc} · ${materia.aula}`;
+      const lista = $("listaAvisos");
+      lista.replaceChildren(crearNodo("div", { className: "estado-lista", textContent: "Cargando avisos..." }));
+
+      $("modalAvisos").classList.add("visible");
+      busqueda.blur();
+
+      try {
+        if (avisosEnMemoria === null) {
+          const snap = await getDocs(collection(db, "avisos"));
+          avisosEnMemoria = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        }
+
+        const getFecha = a => obtenerTimestamp(a.fechaPublicacion || a.fechaCreacion || a.fecha || a.createdAt || a.timestamp);
+        const encontrados = avisosEnMemoria.filter(a => esDeLaMateria(a, materia)).sort((a, b) => getFecha(b) - getFecha(a));
+
+        lista.replaceChildren();
+        if (!encontrados.length) {
+          lista.appendChild(crearNodo("div", { className: "estado-lista", textContent: "Todavía no hay avisos publicados para esta materia." }));
+          return;
+        }
+        encontrados.forEach(a => lista.appendChild(crearElementoAviso(a)));
+      } catch (err) {
+        console.error("Error al consultar avisos:", err);
+        lista.replaceChildren(crearNodo("div", { className: "estado-lista", textContent: "No se pudieron cargar los avisos. Revisa las reglas de lectura de Firestore." }));
+      }
+    }
+
+    function cerrarModal() {
+      $("modalAvisos").classList.remove("visible");
+    }
+
+    $("cerrarModal").addEventListener("click", cerrarModal);
+    $("modalAvisos").addEventListener("click", e => { if (e.target === $("modalAvisos")) cerrarModal(); });
+
+    // --- Notificaciones en tiempo real ---
+    const panelNotificaciones = $("panelNotificaciones");
+    const listaNotificaciones = $("listaNotificaciones");
+    const badgeNotificaciones = $("badgeNotificaciones");
+    const botonNotificaciones = $("notificaciones");
+    const botonMenuUsuario = $("menuUsuario");
+    const perfilMenu = $("perfilMenu");
+
+    function textoVistaPrevia(m) {
+      const texto = String(m.texto || "").trim();
+      if (texto) return texto;
+      if (m.archivoNombre) return `📎 ${m.archivoNombre}`;
+      if (m.archivoURL) return "📎 Te enviaron un archivo";
+      return "Te enviaron un mensaje.";
+    }
+
+    function renderizarNotificaciones(mensajes) {
+      const pendientes = mensajes
+        .filter(m => m.leido !== true)
+        .sort((a, b) => obtenerTimestamp(b.fecha) - obtenerTimestamp(a.fecha));
+
+      badgeNotificaciones.textContent = pendientes.length > 99 ? "99+" : String(pendientes.length);
+      badgeNotificaciones.classList.toggle("visible", pendientes.length > 0);
+      listaNotificaciones.replaceChildren();
+
+      if (!pendientes.length) {
+        listaNotificaciones.appendChild(crearNodo("div", { className: "notificacion-vacia", textContent: "No tienes mensajes nuevos." }));
+        return;
+      }
+
+      pendientes.slice(0, 20).forEach(m => {
+        const emisor = m.emisorNombre || m.emisorId || "Usuario UV";
+        const boton = crearNodo("button", { type: "button", className: "notificacion-chat" }, [
+          crearNodo("strong", { textContent: `${emisor}${m.emisorId ? " · " + m.emisorId : ""}` }),
+          crearNodo("span", { textContent: textoVistaPrevia(m) })
+        ]);
+
+        boton.addEventListener("click", () => {
+          panelNotificaciones.classList.remove("visible");
+          botonNotificaciones.setAttribute("aria-expanded", "false");
+
+          sessionStorage.setItem("chatPendienteUV", JSON.stringify({
+            matricula: String(m.emisorId || ""),
+            nombre: String(emisor),
+            rol: m.rolEmisor === "tutor" ? "Tutor" : "Estudiante"
+          }));
+
+          // Redirige a la pantalla de chats del estudiante para abrir la conversación seleccionada
+          window.location.assign(new URL("chats_estudiantes.html", window.location.href).href);
+        });
+
+        listaNotificaciones.appendChild(boton);
+      });
+    }
+
+    function iniciarNotificacionesEstudiante() {
+      if (!matriculaEstudiante) {
+        listaNotificaciones.replaceChildren(crearNodo("div", {
+          className: "notificacion-vacia",
+          textContent: "La sesión no contiene matrícula. Cierra sesión e inicia nuevamente."
+        }));
+        return;
+      }
+
+      detenerNotificaciones = onSnapshot(
+        query(collection(db, "mensajesTutor"), where("destinatarioId", "==", matriculaEstudiante)),
+        snap => renderizarNotificaciones(snap.docs.map(d => ({ id: d.id, ...d.data() }))),
+        err => {
+          console.error("Error al escuchar notificaciones del estudiante:", err);
+          listaNotificaciones.replaceChildren(crearNodo("div", {
+            className: "notificacion-vacia",
+            textContent: "No se pudieron cargar las notificaciones. Revisa los permisos de Firestore."
+          }));
+          badgeNotificaciones.classList.remove("visible");
+          mostrarMensaje("No se pudieron consultar los mensajes recibidos.");
+        }
+      );
+    }
+    iniciarNotificacionesEstudiante();
+
+    // --- Interacciones de cabecera, menús y barra lateral ---
+    function alternarMenu(panelAbrir, btnAbrir, panelCerrar, btnCerrar) {
+      const visible = !panelAbrir.classList.contains("visible");
+      panelAbrir.classList.toggle("visible", visible);
+      btnAbrir.setAttribute("aria-expanded", String(visible));
+      panelCerrar.classList.remove("visible");
+      btnCerrar.setAttribute("aria-expanded", "false");
+    }
+
+    function cerrarMenusCabecera() {
+      perfilMenu.classList.remove("visible");
+      panelNotificaciones.classList.remove("visible");
+      botonMenuUsuario.setAttribute("aria-expanded", "false");
+      botonNotificaciones.setAttribute("aria-expanded", "false");
+    }
+
+    botonNotificaciones.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      alternarMenu(panelNotificaciones, botonNotificaciones, perfilMenu, botonMenuUsuario);
+    });
+
+    botonMenuUsuario.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      alternarMenu(perfilMenu, botonMenuUsuario, panelNotificaciones, botonNotificaciones);
+    });
+
+    // Abre la pantalla del perfil del estudiante al hacer clic en "Mi perfil"
+    $("abrirMiPerfil").addEventListener("click", e => {
+      e.preventDefault();
+      window.location.assign(new URL("perfil_estudiantes.html", window.location.href).href);
+    });
+
+    // Cierra la sesión actual, limpia sessionStorage y regresa al login
+    $("cerrarSesion").addEventListener("click", e => {
+      e.preventDefault();
+      detenerNotificaciones?.();
+      ["usuarioUV", "perfilSeleccionadoUV", "tipoUsuario", "chatPendienteUV"].forEach(k => sessionStorage.removeItem(k));
+      window.location.assign(new URL("../codigo principal/login.html", window.location.href).href);
+    });
+
+    document.addEventListener("click", e => {
+      if (e.target !== busqueda && !sugerencias.contains(e.target)) sugerencias.classList.remove("visible");
+      if (!e.target.closest("#perfilMenu, #menuUsuario, #panelNotificaciones, #notificaciones")) cerrarMenusCabecera();
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        cerrarModal();
+        cerrarMenusCabecera();
+      }
+    });
+
+    // Indicador lateral
+    const selector = $("seleccion");
+    document.querySelectorAll("[data-seccion]").forEach(el => {
+      el.addEventListener("click", e => {
+        const seccion = el.dataset.seccion;
+        if (POSICIONES_MENU[seccion]) selector.style.top = POSICIONES_MENU[seccion];
+
+        if (el.tagName === "A") {
+          e.preventDefault();
+          if (seccion === "Avisos") return;
+          const destino = el.getAttribute("href");
+          setTimeout(() => window.location.href = destino, 190);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

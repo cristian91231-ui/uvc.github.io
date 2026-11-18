@@ -24,7 +24,7 @@
     /* Contenedor a pantalla completa ajustado exactamente a la imagen de fondo (1920x1080) */
     .pantalla {
       position: relative; width: 100vw; height: 100vh; min-width: 900px; min-height: 540px;
-      background: url("/imagenes/principales/registrarse.jpg") center / 100% 100% no-repeat;
+      background: url("imagenes/principales/registrarse.jpg") center / 100% 100% no-repeat;
     }
 
     /* El formulario ocupa todo el contenedor para posicionar sus hijos respecto a él */
@@ -158,7 +158,7 @@
 
 <script type="module">
   // Importa la base de datos Firestore y la función para agregar documentos
-  import { db } from "../base de datos/firebase.js";
+  import { db } from "./base de datos/firebase.js";
   import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 
   // Verifica que exista un tipo de usuario seleccionado en la sesión

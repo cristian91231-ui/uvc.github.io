@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Álgebra Lineal | Estudiante UV</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; font-family: Arial, Helvetica, sans-serif; }
+    body { overflow: hidden; background: #f3f8ff; color: #14294e; }
+
+    /* Contenedor principal con fondo */
+    .pantalla {
+      position: relative; width: 100vw; height: 100vh; min-height: 600px; overflow: hidden;
+      background: #f3f8ff url("../../imagenes/estudiantes/materias/algebra_lineal.png") center/100% 100% no-repeat;
+    }
+    .sidebar, .volver, .encabezado-materia, .espacio-cabecera { display: none !important; }
+    .cabecera { display: contents; }
+
+    /* Buscador superior */
+    .buscador {
+      position: absolute; z-index: 35; left: 11.8%; top: 1.05%;
+      width: 55.2%; height: 4.45%; padding: 0 15px 0 43px;
+      background: transparent; border-radius: 12px;
+    }
+    .buscador svg, .boton-cabecera svg, .avatar-cabecera svg, .flecha-menu svg { visibility: hidden; }
+    .buscador input {
+      width: 100%; height: 100%; min-width: 0; border: 0; outline: 0;
+      background: transparent; color: #17345e; font-size: 13px;
+    }
+    .buscador input::placeholder { color: transparent; }
+    .buscador input:focus::placeholder { color: #71849d; }
+
+    /* Botones e info de usuario en cabecera */
+    .boton-cabecera { position: absolute; z-index: 45; left: 85.2%; top: .6%; width: 3.1%; height: 5.6%; border: 0; background: transparent; cursor: pointer; }
+    .avatar-cabecera { position: absolute; z-index: 45; left: 88.25%; top: .6%; width: 3.6%; height: 5.6%; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+    .flecha-menu { position: absolute; z-index: 46; left: 96.2%; top: .5%; width: 3.5%; height: 5.8%; border: 0; background: transparent; cursor: pointer; }
+
+    .datos-cabecera {
+      position: absolute; z-index: 45; left: 92.15%; top: .8%;
+      width: 4%; height: 4.8%; display: flex; flex-direction: column;
+      overflow: hidden; pointer-events: none; background: transparent;
+    }
+    .datos-cabecera strong { color: #14294e; font-size: clamp(9px, .72vw, 13px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .datos-cabecera small { color: #71849d; font-size: clamp(8px, .62vw, 11px); }
+
+    .badge-notificaciones {
+      position: absolute; top: -2px; right: -2px; min-width: 17px; height: 17px;
+      padding: 0 4px; display: none; align-items: center; justify-content: center;
+      border-radius: 20px; background: #e53935; color: #fff; font-size: 10px;
+    }
+    .badge-notificaciones.visible { display: flex; }
+
+    /* Menús desplegables (Notificaciones y Perfil) */
+    .panel-notificaciones {
+      position: absolute; z-index: 120; top: 7.4%; right: 7.5%;
+      width: min(360px, 85vw); max-height: 420px; overflow-y: auto;
+      display: none; border: 1px solid #e1eaf4; border-radius: 14px;
+      background: #fff; box-shadow: 0 8px 25px rgba(24, 65, 110, .16);
+    }
+    .panel-notificaciones.visible, .menu-perfil.visible { display: block; }
+    .panel-notificaciones h3 { position: sticky; top: 0; margin: 0; padding: 15px; border-bottom: 1px solid #edf2f8; background: #fff; color: #17345e; font-size: 14px; }
+
+    .notificacion-item {
+      display: block; width: 100%; padding: 13px 15px; border: 0;
+      border-bottom: 1px solid #edf2f8; background: #fff; color: #17345e; text-align: left; cursor: pointer;
+    }
+    .notificacion-item:hover { background: #f1f7ff; }
+    .notificacion-item strong { display: block; margin-bottom: 5px; font-size: 12px; }
+    .notificacion-item small { display: block; color: #71849d; font-size: 11px; }
+    .notificacion-vacia { padding: 20px; color: #71849d; text-align: center; font-size: 12px; }
+
+    .menu-perfil {
+      position: absolute; z-index: 125; top: 7.4%; right: 1.2%; width: 236px;
+      display: none; padding: 16px 23px 17px; border: 1px solid #e1eaf4;
+      border-radius: 15px; background: #fff; box-shadow: 0 8px 25px rgba(24, 65, 110, .14);
+    }
+    .menu-perfil strong { display: block; margin-bottom: 12px; color: #111; font-size: 19px; }
+    .menu-perfil button {
+      display: block; width: 100%; min-height: 42px; padding: 8px 0;
+      border: 0; background: transparent; color: #264e78; text-align: left; font: 16px Arial, sans-serif; cursor: pointer;
+    }
+    .menu-perfil button:hover { color: #0877ee; }
+
+    /* Área principal y muro de publicaciones */
+    .area-principal { position: absolute; z-index: 10; left: 10.75%; top: 7.5%; width: 89.25%; height: 92.5%; overflow: hidden; pointer-events: none; }
+    .publicaciones {
+      position: absolute; z-index: 10; left: 2.7%; top: 20%; width: 70%; height: 76%;
+      overflow-y: auto; display: flex; flex-direction: column; gap: 13px;
+      padding: 4px 8px 15px 2px; pointer-events: auto; background: transparent;
+    }
+    .publicacion {
+      position: relative; padding: 17px 18px; border: 1px solid #e0eaf5;
+      border-radius: 13px; background: rgba(255, 255, 255, .97);
+      box-shadow: 0 3px 12px rgba(25, 75, 125, .06); color: #17345e; overflow-wrap: anywhere;
+    }
+    .publicacion-cabecera { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .avatar-autor {
+      width: 38px; height: 38px; flex: 0 0 38px; display: grid; place-items: center;
+      border-radius: 50%; background: #9eb6d3; color: #fff; font-weight: 700; font-size: 15px;
+    }
+    .autor-datos { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .autor-datos strong { color: #17345e; font-size: 13px; }
+    .autor-datos small { color: #71849d; font-size: 11px; }
+    .fecha-publicacion { margin-left: auto; color: #8292a6; font-size: 10px; }
+    .contenido-publicacion { color: #294767; font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+    .archivo-publicacion { display: block; margin-top: 9px; color: #0877ee; font-size: 12px; text-decoration: none; overflow-wrap: anywhere; }
+    .archivo-publicacion:hover { text-decoration: underline; }
+    .imagen-publicacion { display: block; max-width: min(100%, 430px); max-height: 300px; margin-top: 12px; border-radius: 9px; object-fit: contain; }
+    .video-publicacion { display: block; width: min(100%, 430px); max-height: 300px; margin-top: 12px; border-radius: 9px; background: #000; }
+
+    .encuesta-publicada { margin-top: 12px; padding: 13px; border: 1px solid #dce8f4; border-radius: 10px; background: #f8fbff; }
+    .encuesta-publicada strong { display: block; margin-bottom: 8px; font-size: 13px; }
+    .encuesta-publicada p { margin-top: 6px; color: #294767; font-size: 12px; }
+
+    /* Comentarios */
+    .seccion-comentarios { margin-top: 15px; padding-top: 12px; border-top: 1px solid #e8eef6; }
+    .boton-comentarios { min-height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: #edf6fd; color: #24476d; cursor: pointer; font-size: 12px; }
+    .boton-comentarios:hover { background: #dceeff; }
+    .panel-comentarios { display: none; margin-top: 12px; }
+    .panel-comentarios.visible { display: block; }
+    .lista-comentarios { display: flex; flex-direction: column; gap: 9px; margin-bottom: 12px; }
+    .comentario { display: flex; align-items: flex-start; gap: 8px; }
+    .avatar-comentario {
+      width: 29px; height: 29px; flex: 0 0 29px; display: grid; place-items: center;
+      border-radius: 50%; background: #a8bdd5; color: #fff; font-size: 11px; font-weight: bold;
+    }
+    .comentario-contenido { flex: 1; min-width: 0; padding: 9px 11px; border: 1px solid #e5edf7; border-radius: 10px; background: #f9fbfe; }
+    .comentario-contenido strong { display: block; margin-bottom: 4px; color: #17345e; font-size: 11px; }
+    .comentario-contenido p { color: #294767; font-size: 12px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .comentario-contenido small { display: block; margin-top: 5px; color: #8292a6; font-size: 9px; }
+
+    .formulario-comentario { display: flex; align-items: center; gap: 8px; }
+    .formulario-comentario textarea {
+      flex: 1; min-width: 0; min-height: 39px; max-height: 100px; resize: vertical;
+      padding: 10px 12px; border: 1px solid #d9e5f2; border-radius: 9px; outline: none;
+      background: #fff; color: #17345e; font: 12px Arial, sans-serif;
+    }
+    .formulario-comentario textarea:focus { border-color: #87bdf3; }
+    .boton-enviar-comentario { min-height: 39px; padding: 0 14px; border: 0; border-radius: 9px; background: #0877ee; color: #fff; font-size: 11px; font-weight: bold; cursor: pointer; }
+    .boton-enviar-comentario:disabled { opacity: .6; cursor: wait; }
+
+    /* Columna derecha (Datos, Archivos, Asistencias) */
+    .columna-derecha {
+      position: absolute !important; z-index: 12 !important; top: 1.5% !important; right: 1.9% !important;
+      left: auto !important; width: 25.2% !important; height: auto !important;
+      display: block !important; overflow: visible !important; pointer-events: none !important;
+    }
+    .tarjeta-informacion {
+      position: absolute !important; left: 0 !important; right: 0 !important; width: 100% !important;
+      margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important;
+      background: transparent !important; box-shadow: none !important; pointer-events: auto !important;
+    }
+    .tarjeta-informacion h3 { visibility: hidden; }
+
+    .tarjeta-datos { top: 0 !important; height: 182px !important; min-height: 182px !important; }
+    .tarjeta-datos .dato-materia {
+      position: absolute !important; left: 65px !important; right: 14px !important;
+      height: 23px !important; display: flex !important; align-items: center !important; margin: 0 !important;
+    }
+    .tarjeta-datos .dato-materia svg { display: none !important; }
+    .tarjeta-datos .dato-materia span {
+      display: block !important; width: 100% !important; height: 23px !important; padding: 2px 5px !important;
+      background: rgba(255, 255, 255, .98) !important; color: #152a58 !important;
+      font-size: 13px !important; line-height: 19px !important; font-weight: 700 !important;
+      white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important;
+    }
+    .tarjeta-datos .dato-materia:nth-of-type(1) { top: 53px !important; }
+    .tarjeta-datos .dato-materia:nth-of-type(2) { top: 89px !important; }
+    .tarjeta-datos .dato-materia:nth-of-type(3) { top: 125px !important; }
+
+    .tarjeta-archivos { top: 199px !important; height: 133px !important; min-height: 133px !important; overflow: hidden !important; }
+    .tarjeta-archivos .lista-archivos {
+      position: absolute !important; inset: 25px 15px 8px 25px !important;
+      display: flex !important; flex-direction: column !important; align-items: flex-start !important;
+      gap: 8px !important; overflow-y: auto !important; background: transparent !important;
+    }
+    .tarjeta-archivos .lista-archivos small,
+    .tarjeta-archivos .lista-archivos .enlace-archivo { display: block !important; width: 100% !important; text-align: left !important; }
+
+    .tarjeta-asistencia { top: 349px !important; height: 136px !important; min-height: 136px !important; overflow: hidden !important; }
+    .tarjeta-asistencia #resumenAsistencia {
+      position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important;
+      display: flex !important; flex-direction: column !important; align-items: center !important;
+      justify-content: flex-start !important; overflow: hidden !important;
+    }
+    .tarjeta-asistencia #resumenAsistencia .asistencia-circulo {
+      flex: 0 0 30px !important; width: 30px !important; height: 30px !important;
+      display: grid !important; place-items: center !important; border-radius: 50% !important;
+      background: #edf5ff !important; color: #0877ee !important; font-size: 11px !important; font-weight: bold !important;
+    }
+    .tarjeta-asistencia #resumenAsistencia .asistencia-detalle {
+      width: 100% !important; display: flex !important; flex-direction: column !important;
+      align-items: center !important; gap: 2px !important; padding: 0 5px !important; text-align: center !important;
+    }
+    .tarjeta-asistencia #resumenAsistencia .asistencia-detalle strong { width: 100% !important; color: #17345e !important; font-size: 11px !important; line-height: 14px !important; }
+    .tarjeta-asistencia #resumenAsistencia .asistencia-detalle small { width: 100% !important; color: #7588a1 !important; font-size: 9px !important; line-height: 12px !important; }
+
+    /* Botones invisibles del menú lateral izquierdo alineados con los 6 iconos del fondo */
+    .hotspots-laterales { position: absolute; z-index: 60; inset: 0 auto 0 0; width: 10.75%; height: 100%; pointer-events: none; }
+    .hotspot-menu { position: absolute; left: .4%; width: 92%; height: 4.5%; border-radius: 8px; display: block; background: transparent; pointer-events: auto; cursor: pointer; }
+    .hotspot-menu:hover { background: rgba(255, 255, 255, .10); }
+    .hotspot-inicio      { top: 15.7%; }
+    .hotspot-avisos      { top: 21.1%; }
+    .hotspot-calendario  { top: 26.4%; }
+    .hotspot-mensajes    { top: 31.4%; }
+    .hotspot-chats       { top: 37.0%; }
+    .hotspot-solicitudes { top: 41.7%; }
+
+    /* Botón invisible sobre "< Volver a Avisos" */
+    .hotspot-volver { position: absolute; z-index: 60; left: 11.3%; top: 8%; width: 17%; height: 5%; border-radius: 8px; display: block; background: transparent; cursor: pointer; }
+
+    /* Notificación flotante (Toast) */
+    .mensaje {
+      position: absolute; z-index: 150; left: 50%; bottom: 18px; transform: translateX(-50%);
+      display: none; max-width: 90%; padding: 12px 17px; border-radius: 9px;
+      background: #073967; color: #fff; box-shadow: 0 5px 18px #0002; font-size: 13px;
+    }
+    .mensaje.visible { display: block; }
+
+    /* Responsivo */
+    @media (max-width: 1050px) {
+      .publicaciones { width: 68%; }
+    }
+    @media (max-width: 760px) {
+      body { overflow: auto; }
+      .pantalla { height: auto; min-height: 100vh; overflow: visible; }
+      .hotspots-laterales { position: fixed; width: 72px; height: 100vh; }
+      .area-principal { position: relative; left: 72px; top: 60px; width: calc(100% - 72px); height: auto; min-height: 1200px; }
+      .publicaciones { position: relative; left: 15px; top: 190px; width: calc(100% - 30px); height: auto; max-height: 550px; }
+      .columna-derecha { position: relative !important; top: 205px !important; left: 15px !important; right: auto !important; width: calc(100% - 30px) !important; height: 485px !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="pantalla" id="pantalla">
+    <!-- Barra lateral de navegación invisible -->
+    <nav class="hotspots-laterales" aria-label="Navegación del estudiante">
+      <a class="hotspot-menu hotspot-inicio" href="../pantalla_principal.html" aria-label="Inicio"></a>
+      <a class="hotspot-menu hotspot-avisos" href="../avisos_estudiantes.html" aria-label="Avisos"></a>
+      <a class="hotspot-menu hotspot-calendario" href="../calendario_estudiante.html" aria-label="Calendario"></a>
+      <a class="hotspot-menu hotspot-mensajes" href="../chats_estudiantes.html" aria-label="Chats"></a>
+      <a class="hotspot-menu hotspot-chats" href="../perfil_estudiantes.html" aria-label="Perfil"></a>
+      <a class="hotspot-menu hotspot-solicitudes" href="../configuracion_estudiante.html" aria-label="Configuración"></a>
+    </nav>
+
+    <a class="hotspot-volver" href="../avisos_estudiantes.html" aria-label="Volver a Avisos"></a>
+
+    <!-- Cabecera superior -->
+    <header class="cabecera">
+      <div class="buscador">
+        <input id="buscarPublicaciones" type="search" placeholder="Buscar publicaciones en específico">
+      </div>
+      <button class="boton-cabecera" id="btnNotificaciones" type="button" aria-label="Notificaciones">
+        <span class="badge-notificaciones" id="badgeNotificaciones"></span>
+      </button>
+      <button class="avatar-cabecera" id="btnPerfil" type="button" title="Mi perfil"></button>
+      <div class="datos-cabecera">
+        <strong id="nombreEstudiante">Estudiante</strong>
+        <small>Estudiante</small>
+      </div>
+      <button class="flecha-menu" id="btnFlecha" type="button" aria-label="Abrir menú"></button>
+    </header>
+
+    <!-- Panel de notificaciones -->
+    <div class="panel-notificaciones" id="panelNotificaciones">
+      <h3>Notificaciones</h3>
+      <div id="listaNotificaciones">
+        <div class="notificacion-vacia">Cargando notificaciones...</div>
+      </div>
+    </div>
+
+    <!-- Menú de perfil -->
+    <div class="menu-perfil" id="menuPerfil">
+      <strong id="nombreMenu">Estudiante</strong>
+      <button type="button" id="abrirPerfil">Mi perfil</button>
+      <button type="button" id="cerrarSesion">Cerrar sesión</button>
+    </div>
+
+    <!-- Contenido principal -->
+    <section class="area-principal">
+      <section class="publicaciones" id="publicaciones" aria-live="polite">
+        <p>Cargando publicaciones del tutor...</p>
+      </section>
+
+      <aside class="columna-derecha">
+        <section class="tarjeta-informacion tarjeta-datos">
+          <h3>Información de la materia</h3>
+          <div class="dato-materia"><span id="datoNrc">NRC: Cargando...</span></div>
+          <div class="dato-materia"><span id="datoAula">Aula: Cargando...</span></div>
+          <div class="dato-materia"><span id="datoEdificio">Edificio: Cargando...</span></div>
+        </section>
+
+        <section class="tarjeta-informacion tarjeta-archivos">
+          <h3>Archivos</h3>
+          <div class="lista-archivos" id="listaArchivos">
+            <p>Cargando archivos...</p>
+          </div>
+        </section>
+
+        <section class="tarjeta-informacion tarjeta-asistencia">
+          <h3>Asistencias</h3>
+          <div id="resumenAsistencia"></div>
+        </section>
+      </aside>
+    </section>
+
+    <div class="mensaje" id="mensaje" role="status" aria-live="polite"></div>
+  </main>
+
+  <script type="module">
+    import { db } from "../../base%20de%20datos/firebase.js";
+    import {
+      collection, doc, onSnapshot, query, where, orderBy, addDoc, serverTimestamp, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+
+    const $ = id => document.getElementById(id);
+    const MATERIA_ID = "algebra_lineal";
+    const refMateria = doc(db, "materias", MATERIA_ID);
+
+    let stopMateria = null, stopPublicaciones = null, stopNotificaciones = null, timerMensaje = null;
+    let terminoBusqueda = "";
+    const stopComentarios = new Map();
+    const tarjetas = new Map();
+
+    // --- Sesión y datos del estudiante ---
+    function leerSesion() {
+      try {
+        return JSON.parse(sessionStorage.getItem("usuarioUV") || "null");
+      } catch (err) {
+        console.error("Error al leer la sesión:", err);
+        return null;
+      }
+    }
+
+    const sesion = leerSesion();
+    const matricula = String(sesion?.matricula || "").trim();
+    const correo = String(sesion?.correo || sesion?.email || "").trim();
+
+    function obtenerNombre(datos = {}) {
+      const campos = [datos.nombre, datos.nombreCompleto, datos.nombres, datos.nombrePerfil, datos.displayName];
+      const hallado = campos.find(v => typeof v === "string" && v.trim());
+      if (hallado) return hallado.trim();
+
+      const mail = String(datos.correo || datos.email || "").trim();
+      return mail.includes("@") ? mail.split("@")[0] : "Estudiante";
+    }
+
+    let nombreEstudiante = obtenerNombre(sesion || {});
+
+    function actualizarNombreUI(nombre) {
+      nombreEstudiante = nombre || "Estudiante";
+      $("nombreEstudiante").textContent = nombreEstudiante;
+      $("nombreMenu").textContent = nombreEstudiante;
+    }
+    actualizarNombreUI(nombreEstudiante);
+
+    // --- Utilidades ---
+    function mostrarMensaje(texto) {
+      const el = $("mensaje");
+      el.textContent = texto;
+      el.classList.add("visible");
+      clearTimeout(timerMensaje);
+      timerMensaje = setTimeout(() => el.classList.remove("visible"), 3500);
+    }
+
+    function formatearFecha(valor) {
+      if (!valor) return "Fecha reciente";
+      try {
+        const fecha = typeof valor.toDate === "function" ? valor.toDate() : new Date(valor);
+        return Number.isNaN(fecha.getTime())
+          ? "Fecha reciente"
+          : fecha.toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" });
+      } catch {
+        return "Fecha reciente";
+      }
+    }
+
+    function obtenerTimestamp(valor) {
+      if (valor?.toMillis) return valor.toMillis();
+      if (valor?.toDate) return valor.toDate().getTime();
+      const ms = new Date(valor || 0).getTime();
+      return Number.isNaN(ms) ? 0 : ms;
+    }
+
+    function normalizar(texto) {
+      return String(texto || "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function crearNodo(tag, props = {}, hijos = []) {
+      const el = document.createElement(tag);
+      Object.assign(el, props);
+      hijos.forEach(h => el.append(h));
+      return el;
+    }
+
+    // --- Sincronización de nombre con Firestore ---
+    async function sincronizarNombre() {
+      if (!matricula) return;
+      try {
+        const snap = await getDocs(query(collection(db, "usuarios"), where("matricula", "==", matricula)));
+        if (snap.empty) return;
+
+        const datosNube = snap.docs[0].data();
+        const nombreNube = obtenerNombre(datosNube);
+
+        if (nombreNube && nombreNube !== "Estudiante") {
+          actualizarNombreUI(nombreNube);
+          sessionStorage.setItem("usuarioUV", JSON.stringify({
+            ...(sesion || {}),
+            ...datosNube,
+            nombre: datosNube.nombre || nombreNube,
+            matricula: datosNube.matricula || matricula
+          }));
+        }
+      } catch (err) {
+        console.warn("No se pudo sincronizar el nombre:", err);
+      }
+    }
+    if (sesion) sincronizarNombre();
+
+    // --- Archivos y Asistencia de la materia ---
+    function renderizarArchivos(lista = []) {
+      const contenedor = $("listaArchivos");
+      contenedor.replaceChildren();
+
+      const disponibles = (Array.isArray(lista) ? lista : []).filter(a => a?.url);
+      if (!disponibles.length) {
+        const vacio = crearNodo("small", { textContent: "Todavía no hay archivos disponibles." });
+        vacio.style.color = "#8292a6";
+        contenedor.appendChild(vacio);
+        return;
+      }
+
+      disponibles.forEach(arch => {
+        contenedor.appendChild(crearNodo("a", {
+          href: arch.url,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          textContent: "📄 " + (arch.nombre || "Abrir archivo")
+        }));
+      });
+    }
+
+    function buscarAsistenciaAlumno(registros = {}) {
+      if (!registros || typeof registros !== "object") return null;
+
+      const nombreNorm = normalizar(nombreEstudiante);
+      const primerNombre = nombreNorm.split(/\s+/)[0] || "";
+      const clavesAlumno = new Set([matricula, correo, sesion?.uid, nombreNorm, primerNombre].map(normalizar).filter(Boolean));
+
+      for (const [id, raw] of Object.entries(registros)) {
+        const dato = typeof raw === "string" ? { registro: raw } : (raw || {});
+        const clavesRegistro = [id, dato.matricula, dato.correo, dato.email, dato.alumnoId, dato.usuarioId, dato.nombre]
+          .map(normalizar).filter(Boolean);
+
+        if (clavesRegistro.some(c => clavesAlumno.has(c))) return dato;
+      }
+      return null;
+    }
+
+    function renderizarAsistencia(registros = {}) {
+      const contenedor = $("resumenAsistencia");
+      contenedor.replaceChildren();
+
+      const registro = buscarAsistenciaAlumno(registros);
+      const circulo = crearNodo("div", { className: "asistencia-circulo" });
+      const titulo = crearNodo("strong");
+      const subtitulo = crearNodo("small");
+
+      if (!registro) {
+        circulo.textContent = "—";
+        titulo.textContent = "Sin registro disponible";
+        subtitulo.textContent = "Tu asistencia aún no ha sido registrada.";
+      } else {
+        const valor = String(registro.registro ?? registro.asistencia ?? registro.estado ?? "Registrada");
+        const match = valor.match(/^(\d+)\s*\/\s*(\d+)$/);
+
+        circulo.textContent = (match && Number(match[2]) > 0)
+          ? Math.round((Number(match[1]) / Number(match[2])) * 100) + "%"
+          : "✓";
+        titulo.textContent = "Tu registro: " + valor;
+        subtitulo.textContent = "Asistencia individual";
+      }
+
+      const detalle = crearNodo("div", { className: "asistencia-detalle" }, [titulo, subtitulo]);
+      contenedor.append(circulo, detalle);
+    }
+
+    stopMateria = onSnapshot(refMateria, snap => {
+      const datos = snap.exists() ? snap.data() : {};
+      $("datoNrc").textContent = datos.nrc ? `NRC: ${datos.nrc}` : "NRC: No registrado";
+      $("datoAula").textContent = datos.aula ? `Aula: ${datos.aula}` : "Aula: No registrada";
+      $("datoEdificio").textContent = datos.edificio ? `Edificio: ${datos.edificio}` : "Edificio: No registrado";
+
+      renderizarArchivos(datos.archivos || []);
+      renderizarAsistencia(datos.asistenciasPorAlumno || {});
+    }, err => {
+      console.error("Error al leer la materia:", err);
+      mostrarMensaje("No se pudo cargar la información de la materia.");
+    });
+
+    // --- Comentarios ---
+    function crearNodoComentario(datos) {
+      const inicial = String(datos.autorNombre || "E").trim().charAt(0).toUpperCase();
+      return crearNodo("div", { className: "comentario" }, [
+        crearNodo("div", { className: "avatar-comentario", textContent: inicial }),
+        crearNodo("div", { className: "comentario-contenido" }, [
+          crearNodo("strong", { textContent: datos.autorNombre || "Estudiante" }),
+          crearNodo("p", { textContent: datos.texto || "" }),
+          crearNodo("small", { textContent: formatearFecha(datos.fecha) })
+        ])
+      ]);
+    }
+
+    function enlazarComentarios(tarjeta, idPublicacion) {
+      const boton = crearNodo("button", { type: "button", className: "boton-comentarios", textContent: "💬 Comentar" });
+      const lista = crearNodo("div", { className: "lista-comentarios" });
+      const entrada = crearNodo("textarea", { maxLength: 1000, placeholder: "Escribe un comentario...", required: true });
+      const btnEnviar = crearNodo("button", { type: "submit", className: "boton-enviar-comentario", textContent: "Enviar" });
+      const form = crearNodo("form", { className: "formulario-comentario" }, [entrada, btnEnviar]);
+      const panel = crearNodo("div", { className: "panel-comentarios" }, [lista, form]);
+
+      tarjeta.appendChild(crearNodo("section", { className: "seccion-comentarios" }, [boton, panel]));
+
+      boton.addEventListener("click", () => panel.classList.toggle("visible"));
+
+      const refComentarios = collection(db, "avisos", idPublicacion, "comentarios");
+      const detener = onSnapshot(query(refComentarios, orderBy("fecha", "asc")), snap => {
+        lista.replaceChildren();
+        boton.textContent = `💬 Comentar (${snap.size})`;
+
+        if (snap.empty) {
+          lista.appendChild(crearNodo("p", { className: "estado-vacio", textContent: "Todavía no hay comentarios." }));
+        } else {
+          snap.forEach(docSnap => lista.appendChild(crearNodoComentario(docSnap.data())));
+        }
+      }, err => {
+        console.error("Error al consultar comentarios:", err);
+        lista.textContent = "No se pudieron cargar los comentarios.";
+      });
+
+      stopComentarios.set(idPublicacion, detener);
+
+      form.addEventListener("submit", async e => {
+        e.preventDefault();
+        const texto = entrada.value.trim();
+        if (!texto) return;
+        if (!sesion) return mostrarMensaje("Inicia sesión para poder comentar.");
+
+        btnEnviar.disabled = true;
+        btnEnviar.textContent = "Enviando...";
+
+        try {
+          await addDoc(refComentarios, {
+            texto,
+            autorNombre: nombreEstudiante,
+            autorId: matricula || correo,
+            autorRol: "Estudiante",
+            fecha: serverTimestamp()
+          });
+          entrada.value = "";
+          mostrarMensaje("Comentario enviado correctamente.");
+        } catch (err) {
+          console.error("Error al enviar el comentario:", err);
+          mostrarMensaje("No se pudo enviar el comentario. Revisa los permisos de Firestore.");
+        } finally {
+          btnEnviar.disabled = false;
+          btnEnviar.textContent = "Enviar";
+        }
+      });
+    }
+
+    // --- Publicaciones ---
+    function crearNodoPublicacion(pub) {
+      const inicial = String(pub.autorNombre || "T").trim().charAt(0).toUpperCase();
+      const cabecera = crearNodo("div", { className: "publicacion-cabecera" }, [
+        crearNodo("div", { className: "avatar-autor", textContent: inicial }),
+        crearNodo("div", { className: "autor-datos" }, [
+          crearNodo("strong", { textContent: pub.autorNombre || "Tutor" }),
+          crearNodo("small", { textContent: "Tutor" })
+        ]),
+        crearNodo("small", { className: "fecha-publicacion", textContent: formatearFecha(pub.fecha) })
+      ]);
+
+      const tarjeta = crearNodo("article", { className: "publicacion" }, [cabecera]);
+
+      if (pub.contenido) {
+        tarjeta.appendChild(crearNodo("p", { className: "contenido-publicacion", textContent: pub.contenido }));
+      }
+
+      (Array.isArray(pub.archivos) ? pub.archivos : []).forEach(arch => {
+        if (!arch?.url) return;
+        tarjeta.appendChild(crearNodo("a", {
+          className: "archivo-publicacion",
+          href: arch.url,
+          target: "_blank",
+          rel: "noopener noreferrer",
+          textContent: "📎 " + (arch.nombre || "Abrir archivo")
+        }));
+
+        const tipo = String(arch.tipo || "").toLowerCase();
+        if (tipo.startsWith("image/")) {
+          tarjeta.appendChild(crearNodo("img", {
+            className: "imagen-publicacion",
+            src: arch.url,
+            alt: arch.nombre || "Imagen publicada por el tutor"
+          }));
+        } else if (tipo.startsWith("video/")) {
+          tarjeta.appendChild(crearNodo("video", {
+            className: "video-publicacion",
+            src: arch.url,
+            controls: true,
+            preload: "metadata"
+          }));
+        }
+      });
+
+      if (pub.encuesta?.pregunta) {
+        const encuesta = crearNodo("div", { className: "encuesta-publicada" }, [
+          crearNodo("strong", { textContent: "Encuesta: " + pub.encuesta.pregunta })
+        ]);
+        (pub.encuesta.opciones || []).forEach(op => encuesta.appendChild(crearNodo("p", { textContent: "• " + op })));
+        tarjeta.appendChild(encuesta);
+      }
+
+      enlazarComentarios(tarjeta, pub.id);
+      return tarjeta;
+    }
+
+    function limpiarComentarios() {
+      stopComentarios.forEach(stop => stop());
+      stopComentarios.clear();
+    }
+
+    function filtrarPublicaciones() {
+      tarjetas.forEach(tarjeta => {
+        const coincide = !terminoBusqueda || normalizar(tarjeta.textContent).includes(terminoBusqueda);
+        tarjeta.style.display = coincide ? "" : "none";
+      });
+    }
+
+    stopPublicaciones = onSnapshot(
+      query(collection(db, "avisos"), where("materiaId", "==", MATERIA_ID)),
+      snap => {
+        const lista = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(p => p.tipo === "publicacion" || !p.tipo)
+          .sort((a, b) => obtenerTimestamp(b.fecha) - obtenerTimestamp(a.fecha));
+
+        const contenedor = $("publicaciones");
+        limpiarComentarios();
+        tarjetas.clear();
+        contenedor.replaceChildren();
+
+        if (!lista.length) {
+          const vacio = crearNodo("p", {
+            className: "estado-vacio",
+            textContent: "Todavía no hay publicaciones del tutor para esta materia."
+          });
+          vacio.style.cssText = "color:#7587a0;font-size:13px";
+          contenedor.appendChild(vacio);
+          return;
+        }
+
+        lista.forEach(pub => {
+          const tarjeta = crearNodoPublicacion(pub);
+          tarjetas.set(pub.id, tarjeta);
+          contenedor.appendChild(tarjeta);
+        });
+
+        filtrarPublicaciones();
+      },
+      err => {
+        console.error("Error al cargar publicaciones:", err);
+        $("publicaciones").replaceChildren(
+          crearNodo("p", { className: "estado-vacio", textContent: "No se pudieron cargar las publicaciones. Revisa los permisos de Firestore." })
+        );
+      }
+    );
+
+    $("buscarPublicaciones").addEventListener("input", e => {
+      terminoBusqueda = normalizar(e.target.value);
+      filtrarPublicaciones();
+    });
+
+    // --- Notificaciones ---
+    function iniciarNotificaciones() {
+      const host = $("listaNotificaciones");
+      const badge = $("badgeNotificaciones");
+
+      if (!matricula) {
+        host.replaceChildren(crearNodo("div", { className: "notificacion-vacia", textContent: "No se encontró la matrícula en tu sesión." }));
+        return;
+      }
+
+      stopNotificaciones = onSnapshot(
+        query(collection(db, "mensajesTutor"), where("destinatarioId", "==", matricula)),
+        snap => {
+          const pendientes = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(item => item.leido !== true)
+            .sort((a, b) => obtenerTimestamp(b.fecha) - obtenerTimestamp(a.fecha));
+
+          badge.textContent = pendientes.length > 99 ? "99+" : String(pendientes.length);
+          badge.classList.toggle("visible", pendientes.length > 0);
+          host.replaceChildren();
+
+          if (!pendientes.length) {
+            host.appendChild(crearNodo("div", { className: "notificacion-vacia", textContent: "No tienes notificaciones nuevas." }));
+            return;
+          }
+
+          pendientes.slice(0, 20).forEach(item => {
+            const btn = crearNodo("button", { type: "button", className: "notificacion-item" }, [
+              crearNodo("strong", { textContent: item.emisorNombre || item.emisorId || "Nuevo mensaje" }),
+              crearNodo("small", { textContent: item.texto || item.archivoNombre || "Te enviaron un mensaje." })
+            ]);
+
+            btn.addEventListener("click", () => {
+              sessionStorage.setItem("chatPendienteUV", JSON.stringify({
+                matricula: String(item.emisorId || ""),
+                nombre: String(item.emisorNombre || item.emisorId || "Usuario UV"),
+                rol: item.rolEmisor === "tutor" ? "Tutor" : "Estudiante"
+              }));
+              window.location.href = "../chats_estudiantes.html";
+            });
+
+            host.appendChild(btn);
+          });
+        },
+        err => {
+          console.error("Error al cargar notificaciones:", err);
+          host.replaceChildren(crearNodo("div", { className: "notificacion-vacia", textContent: "No se pudieron cargar las notificaciones." }));
+          badge.classList.remove("visible");
+        }
+      );
+    }
+    iniciarNotificaciones();
+
+    // --- Interacciones de cabecera y cierre de menús ---
+    function alternarMenu(panelAbrir, btnAbrir, panelCerrar, btnCerrar) {
+      const visible = !panelAbrir.classList.contains("visible");
+      panelAbrir.classList.toggle("visible", visible);
+      btnAbrir.setAttribute("aria-expanded", String(visible));
+      panelCerrar.classList.remove("visible");
+      btnCerrar.setAttribute("aria-expanded", "false");
+    }
+
+    function cerrarMenus() {
+      $("menuPerfil").classList.remove("visible");
+      $("panelNotificaciones").classList.remove("visible");
+      $("btnFlecha").setAttribute("aria-expanded", "false");
+      $("btnNotificaciones").setAttribute("aria-expanded", "false");
+    }
+
+    $("btnNotificaciones").addEventListener("click", e => {
+      e.stopPropagation();
+      alternarMenu($("panelNotificaciones"), $("btnNotificaciones"), $("menuPerfil"), $("btnFlecha"));
+    });
+
+    $("btnFlecha").addEventListener("click", e => {
+      e.stopPropagation();
+      alternarMenu($("menuPerfil"), $("btnFlecha"), $("panelNotificaciones"), $("btnNotificaciones"));
+    });
+
+    $("btnPerfil").addEventListener("click", () => window.location.href = "../perfil_estudiantes.html");
+    $("abrirPerfil").addEventListener("click", () => window.location.href = "../perfil_estudiantes.html");
+
+    // Cierra la sesión actual, limpia sessionStorage y redirige al login
+    $("cerrarSesion").addEventListener("click", () => {
+      stopMateria?.();
+      stopPublicaciones?.();
+      stopNotificaciones?.();
+      limpiarComentarios();
+
+      ["usuarioUV", "tipoUsuario", "perfilSeleccionadoUV", "chatPendienteUV"].forEach(k => sessionStorage.removeItem(k));
+      window.location.href = "../../codigo principal/login.html";
+    });
+
+    document.addEventListener("click", e => {
+      if (!e.target.closest("#menuPerfil, #btnFlecha, #panelNotificaciones, #btnNotificaciones")) cerrarMenus();
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") cerrarMenus();
+    });
+  </script>
+</body>
+</html>

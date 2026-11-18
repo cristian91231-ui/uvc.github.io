@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuración | Tutor UV</title>
+<style>
+/* Estilos generales y fondo de la pantalla de configuración del tutor */
+*{box-sizing:border-box;}
+html,body{width:100%;height:100%;margin:0;font-family:Arial,sans-serif;}
+body{overflow:hidden;background:#edf5ff;color:#102b59;}
+.pantalla{position:relative;width:100vw;height:100vh;min-width:900px;min-height:560px;overflow:hidden;background:url("../imagenes/tutorados/configuracion_tutor.png") center/100% 100% no-repeat;}
+
+/* Clase base para áreas y botones transparentes sobre los iconos del diseño */
+.zona{position:absolute;z-index:20;border:0;padding:0;background:transparent;cursor:pointer;border-radius:8px;}
+.zona:hover{background:rgba(20,120,230,.08);}
+.zona:focus-visible{outline:2px solid #1677e8;outline-offset:-2px;border-radius:8px;}
+
+/* Botones del menú lateral izquierdo (5 opciones del tutor) */
+.nav-inicio{left:.4%;top:15.7%;width:10.2%;height:4.8%;}
+.nav-calendario{left:.4%;top:21.8%;width:10.2%;height:4.8%;}
+.nav-chats{left:.4%;top:28.2%;width:10.2%;height:4.8%;}
+.nav-perfil{left:.4%;top:34.4%;width:10.2%;height:4.8%;}
+.nav-config{left:.4%;top:40.8%;width:10.2%;height:4.8%;}
+
+/* Accesos superiores y foto de perfil con botones de cámara y lápiz */
+#btnNotificaciones{left:84.3%;top:1%;width:3.4%;height:6%;}
+#btnMenuUsuario{left:88.5%;top:1%;width:7%;height:6%;}
+#avatarTutor{position:absolute;z-index:12;left:18.0%;top:25.4%;width:11.7%;height:20.8%;object-fit:cover;border-radius:50%;display:none;pointer-events:none;}
+#btnCamaraFoto{position:absolute;z-index:22;left:26.8%;top:39.4%;width:3.5%;height:6.2%;border:0;border-radius:50%;background:transparent;cursor:pointer;}
+#btnEditarFoto{position:absolute;z-index:22;left:21.4%;top:49.5%;width:6.0%;height:6.3%;border:0;border-radius:30px;background:transparent;cursor:pointer;}
+#btnCamaraFoto:hover,#btnEditarFoto:hover{background:rgba(30,112,210,.09);}
+#archivoFoto{display:none;}
+
+/* Campos visuales de datos de la cuenta y botones de lápiz a la derecha */
+.campo-visual{position:absolute;z-index:15;left:61.2%;width:27.5%;height:5.7%;padding:0 14px;border:0;outline:none;border-radius:12px;background:transparent;color:#17345e;font:clamp(12px,1.05vw,18px) Arial,sans-serif;}
+.campo-visual:focus{background:rgba(255,255,255,.35);box-shadow:inset 0 0 0 2px rgba(65,125,196,.25);}
+.campo-visual[readonly]{cursor:default;}
+#correoVisual{top:36.8%;}
+#matriculaVisual{top:45.9%;}
+#nacimientoVisual{top:55.0%;}
+#campusVisual{top:64.1%;}
+#contrasenaVisual{top:73.2%;}
+.btn-editar-campo{position:absolute;z-index:21;left:90.8%;width:5.3%;height:5.8%;border:0;border-radius:30px;background:transparent;cursor:pointer;}
+.btn-editar-campo:hover{background:rgba(30,112,210,.09);}
+#editarCorreo{top:36.8%;}
+#editarMatricula{top:45.9%;}
+#editarNacimiento{top:55.0%;}
+#editarCampus{top:64.1%;}
+#editarContrasena{top:73.2%;}
+.menu-usuario{position:absolute;z-index:40;right:2%;top:7.5%;width:210px;display:none;padding:13px;border:1px solid #dce8f6;border-radius:12px;background:white;box-shadow:0 8px 25px #0002;color:#17345e;font-size:12px;}
+.menu-usuario.visible{display:block;}
+.menu-usuario strong{display:block;margin-bottom:7px;overflow-wrap:anywhere;}
+.menu-usuario button{width:100%;padding:9px;border:0;border-radius:7px;background:#f2f6fc;text-align:left;color:#17345e;cursor:pointer;}
+.modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,15,40,.55);}
+.modal.visible{display:flex;}
+.modal-contenido{width:min(100%,440px);padding:24px;border-radius:16px;background:#fff;box-shadow:0 10px 35px #0003;}
+.modal-contenido h2{margin:0 0 8px;color:#123f91;font-size:20px;}
+.modal-contenido p{margin:0 0 16px;color:#64748b;font-size:13px;line-height:1.5;}
+.modal-contenido label{display:block;margin:12px 0 6px;color:#243e64;font-size:13px;font-weight:bold;}
+.modal-contenido input,.modal-contenido select{width:100%;min-height:43px;padding:10px 12px;border:1px solid #d5e1ee;border-radius:9px;outline:none;color:#17345e;background:#fff;font:14px Arial,sans-serif;}
+.modal-contenido input:focus,.modal-contenido select:focus{border-color:#2878d8;box-shadow:0 0 0 2px #dcecff;}
+.botones-modal{display:flex;gap:9px;margin-top:18px;}
+.botones-modal button{flex:1;min-height:41px;border:0;border-radius:8px;font-weight:bold;cursor:pointer;}
+.btn-guardar{background:#0877ee;color:#fff;}
+.btn-cancelar{background:#e8edf3;color:#334155;}
+.botones-modal button:disabled{opacity:.6;cursor:wait;}
+.error-modal{min-height:18px;margin-top:10px;color:#b42335;font-size:12px;}
+.mensaje{position:fixed;z-index:150;left:50%;bottom:18px;transform:translateX(-50%);display:none;max-width:90%;padding:12px 17px;border-radius:9px;background:#073967;color:white;box-shadow:0 5px 18px #0002;font-size:13px;}
+.mensaje.visible{display:block;}
+.overlay-carga{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.72);color:#0755b8;font-weight:bold;}
+.overlay-carga.visible{display:flex;}
+</style>
+</head>
+<body>
+
+<main class="pantalla">
+  <a class="zona nav-inicio" href="pantalla_principal_tutor.html"></a>
+  <a class="zona nav-calendario" href="calendario_tutor.html"></a>
+  <a class="zona nav-chats" href="chats_tutor.html"></a>
+  <a class="zona nav-perfil" href="perfil_tutor.html"></a>
+  <a class="zona nav-config" href="configuracion_tutor.html"></a>
+
+  <button class="zona" id="btnNotificaciones"></button>
+  <button class="zona" id="btnMenuUsuario"></button>
+
+  <!-- Foto del tutor y botones para cambiarla (tanto en la cámara azul como en el lápiz inferior) -->
+  <img id="avatarTutor" alt="Foto tutor">
+  <button id="btnCamaraFoto" type="button" aria-label="Cambiar fotografía" title="Cambiar fotografía"></button>
+  <button id="btnEditarFoto" type="button" aria-label="Cambiar fotografía" title="Cambiar fotografía"></button>
+  <input id="archivoFoto" type="file" accept="image/png,image/jpeg,image/webp">
+
+  <input class="campo-visual" id="correoVisual" type="email" readonly>
+  <button class="btn-editar-campo" id="editarCorreo"></button>
+
+  <input class="campo-visual" id="matriculaVisual" type="text" readonly>
+  <button class="btn-editar-campo" id="editarMatricula"></button>
+
+  <input class="campo-visual" id="nacimientoVisual" type="text" readonly>
+  <button class="btn-editar-campo" id="editarNacimiento"></button>
+
+  <input class="campo-visual" id="campusVisual" type="text" readonly>
+  <button class="btn-editar-campo" id="editarCampus"></button>
+
+  <input class="campo-visual" id="contrasenaVisual" type="password" readonly>
+  <button class="btn-editar-campo" id="editarContrasena"></button>
+
+  <div class="menu-usuario" id="menuUsuario">
+    <strong id="nombreUsuarioMenu">Tutor</strong>
+    <button id="cerrarSesion" type="button">Cerrar sesión</button>
+  </div>
+
+  <div class="modal" id="modalEdicion">
+    <div class="modal-contenido">
+      <h2 id="tituloModal">Editar dato</h2>
+      <p id="descripcionModal">Actualiza la información de tu cuenta.</p>
+      <div id="camposEdicion"></div>
+      <div class="error-modal" id="errorModal"></div>
+      <div class="botones-modal">
+        <button class="btn-cancelar" id="cancelarEdicion" type="button">Cancelar</button>
+        <button class="btn-guardar" id="guardarEdicion" type="button">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mensaje" id="mensaje"></div>
+  <div class="overlay-carga" id="overlayCarga">Guardando cambios...</div>
+</main>
+
+<script type="module">
+import { db, storage } from "../base%20de%20datos/firebase.js";
+import { getApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
+import { collection, query, where, getDocs, updateDoc, onSnapshot, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
+import { getAuth, EmailAuthProvider, reauthenticateWithCredential, updatePassword, updateEmail } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
+
+const $ = id => document.getElementById(id);
+const CAMPUS = ["Xalapa", "Veracruz", "Orizaba-Córdoba", "Poza Rica-Tuxpan", "Coatzacoalcos-Minatitlán"];
+const auth = getAuth(getApp());
+
+let usuario = null;
+try {
+  usuario = JSON.parse(sessionStorage.getItem("usuarioUV") || "null");
+} catch (error) {
+  console.error("No se pudo leer la sesión:", error);
+}
+
+const rolUsuario = String(usuario?.tipoUsuario || usuario?.rol || sessionStorage.getItem("tipoUsuario") || "")
+  .trim().toLowerCase();
+
+const esTutor = rolUsuario.includes("tutor") || rolUsuario.includes("docente");
+
+if (!usuario || !esTutor) {
+  location.replace("../codigo%20principal/login.html");
+  throw new Error("No existe una sesión válida de tutor.");
+}
+
+const matriculaSesion = String(usuario.matricula || "").trim();
+const correoSesion = String(usuario.correo || usuario.email || "").trim();
+
+let datosUsuario = null;
+let referenciaUsuario = null;
+let campoActual = null;
+let temporizadorMensaje = null;
+let detenerUsuario = null;
+let cargaTerminada = false;
+
+const botonesEdicion = [
+  "btnCamaraFoto", "btnEditarFoto", "editarCorreo", "editarMatricula",
+  "editarNacimiento", "editarCampus", "editarContrasena"
+];
+
+botonesEdicion.forEach(id => {
+  $(id).disabled = true;
+});
+
+function mostrarMensaje(texto, error = false) {
+  const msj = $("mensaje");
+  msj.textContent = texto;
+  msj.style.background = error ? "#a52b3a" : "#073967";
+  msj.classList.add("visible");
+  clearTimeout(temporizadorMensaje);
+  temporizadorMensaje = setTimeout(() => {
+    msj.classList.remove("visible");
+  }, 4000);
+}
+
+function guardarSesion() {
+  sessionStorage.setItem("usuarioUV", JSON.stringify(usuario));
+}
+
+function obtenerNacimiento(datos) {
+  return datos.nacimiento ?? datos.anioNacimiento ?? datos.añoNacimiento ?? "";
+}
+
+function actualizarVista() {
+  if (!datosUsuario) return;
+
+  $("correoVisual").value = datosUsuario.correo || datosUsuario.email || "";
+  $("matriculaVisual").value = datosUsuario.matricula || "";
+  $("nacimientoVisual").value = obtenerNacimiento(datosUsuario);
+  $("campusVisual").value = datosUsuario.campus || "";
+  $("contrasenaVisual").value = "••••••••";
+
+  $("nombreUsuarioMenu").textContent =
+    datosUsuario.nombrePerfil ||
+    datosUsuario.nombre ||
+    datosUsuario.nombreCompleto ||
+    "Tutor";
+
+  const foto =
+    datosUsuario.fotoPerfilURL ||
+    datosUsuario.fotoPerfil ||
+    datosUsuario.fotoURL ||
+    "";
+
+  if (foto) {
+    $("avatarTutor").src = foto;
+    $("avatarTutor").style.display = "block";
+  } else {
+    $("avatarTutor").removeAttribute("src");
+    $("avatarTutor").style.display = "none";
+  }
+
+  Object.assign(usuario, {
+    correo: datosUsuario.correo || datosUsuario.email || usuario.correo || "",
+    email: datosUsuario.email || datosUsuario.correo || usuario.email || "",
+    matricula: datosUsuario.matricula || usuario.matricula || "",
+    nacimiento: obtenerNacimiento(datosUsuario),
+    anioNacimiento: obtenerNacimiento(datosUsuario),
+    campus: datosUsuario.campus || "",
+    nombre: datosUsuario.nombre || datosUsuario.nombreCompleto || usuario.nombre || "",
+    fotoPerfil: foto,
+    fotoPerfilURL: foto,
+    tipoUsuario: "tutor"
+  });
+
+  guardarSesion();
+}
+
+async function consultarUsuarioPorCampo(campo, valor) {
+  if (!valor) return null;
+  return await getDocs(query(collection(db, "usuarios"), where(campo, "==", valor)));
+}
+
+async function buscarTutor() {
+  if (!matriculaSesion && !correoSesion) {
+    throw new Error("La sesión no contiene matrícula ni correo para localizar al tutor.");
+  }
+
+  let resultado = matriculaSesion
+    ? await consultarUsuarioPorCampo("matricula", matriculaSesion)
+    : null;
+
+  if ((!resultado || resultado.empty) && correoSesion) {
+    resultado = await consultarUsuarioPorCampo("correo", correoSesion);
+  }
+
+  if ((!resultado || resultado.empty) && correoSesion) {
+    resultado = await consultarUsuarioPorCampo("email", correoSesion);
+  }
+
+  if (!resultado || resultado.empty) {
+    throw new Error("No se encontró tu registro en la colección usuarios de Firestore.");
+  }
+
+  const coincidencia = resultado.docs.find(d =>
+    matriculaSesion && String(d.data().matricula || "").trim() === matriculaSesion
+  ) || resultado.docs[0];
+
+  referenciaUsuario = coincidencia.ref;
+  datosUsuario = coincidencia.data();
+
+  actualizarVista();
+
+  if (detenerUsuario) detenerUsuario();
+
+  detenerUsuario = onSnapshot(referenciaUsuario, snapshot => {
+    if (!snapshot.exists()) return;
+    datosUsuario = snapshot.data();
+    actualizarVista();
+  }, error => {
+    console.error("Error al sincronizar los datos de la cuenta:", error);
+    mostrarMensaje("No se pudo actualizar la vista en tiempo real.", true);
+  });
+
+  cargaTerminada = true;
+
+  botonesEdicion.forEach(id => {
+    $(id).disabled = false;
+  });
+
+  return referenciaUsuario;
+}
+
+const promesaCarga = buscarTutor().catch(error => {
+  console.error("Error al cargar tutor:", error);
+  mostrarMensaje(error.message || "No se pudo cargar la cuenta del tutor.", true);
+  throw error;
+});
+
+const configuracion = {
+  correo: { titulo: "Cambiar correo", etiqueta: "Nuevo correo", tipo: "email", bd: "correo" },
+  matricula: { titulo: "Cambiar matrícula", etiqueta: "Nueva matrícula", tipo: "text", bd: "matricula" },
+  nacimiento: { titulo: "Cambiar nacimiento", etiqueta: "Año de nacimiento", tipo: "year", bd: "nacimiento" },
+  campus: { titulo: "Cambiar campus", etiqueta: "Campus", tipo: "select", bd: "campus" },
+  contrasena: { titulo: "Cambiar contraseña", etiqueta: "Contraseña", tipo: "password", bd: "contrasena" }
+};
+
+function crearCampo(labelTxt, tipo, id, valor = "") {
+  const div = document.createElement("div");
+  const label = document.createElement("label");
+
+  label.textContent = labelTxt;
+  label.htmlFor = id;
+  div.appendChild(label);
+
+  let ctrl;
+
+  if (tipo === "select" || tipo === "year") {
+    ctrl = document.createElement("select");
+    ctrl.id = id;
+    ctrl.appendChild(new Option("Selecciona", ""));
+
+    if (tipo === "select") {
+      CAMPUS.forEach(c => ctrl.appendChild(new Option(c, c)));
+    } else {
+      const anio = new Date().getFullYear();
+      for (let i = anio - 15; i >= anio - 100; i--) {
+        ctrl.appendChild(new Option(String(i), String(i)));
+      }
+    }
+
+    ctrl.value = String(valor ?? "");
+  } else {
+    ctrl = document.createElement("input");
+    ctrl.type = tipo;
+    ctrl.id = id;
+    ctrl.value = String(valor ?? "");
+
+    if (tipo === "password") {
+      ctrl.autocomplete = "current-password";
+    }
+  }
+
+  div.appendChild(ctrl);
+  return div;
+}
+
+function abrirEditor(campo) {
+  if (!cargaTerminada || !datosUsuario || !referenciaUsuario) {
+    return mostrarMensaje("Espera a que termine de cargar tu información.", true);
+  }
+
+  campoActual = campo;
+
+  const config = configuracion[campo];
+  const cont = $("camposEdicion");
+
+  cont.replaceChildren();
+
+  $("tituloModal").textContent = config.titulo;
+  $("descripcionModal").textContent =
+    campo === "contrasena"
+      ? "La contraseña se cambia mediante Firebase Authentication; nunca se guarda en texto legible en Firestore."
+      : "Actualiza la información de tu cuenta.";
+
+  $("errorModal").textContent = "";
+
+  if (campo === "contrasena") {
+    cont.appendChild(crearCampo("Contraseña actual", "password", "claveActual"));
+    cont.appendChild(crearCampo("Nueva contraseña (mínimo 8 caracteres)", "password", "nuevoValor"));
+    cont.appendChild(crearCampo("Confirmar nueva contraseña", "password", "confirmarValor"));
+  } else if (campo === "correo" && auth.currentUser) {
+    cont.appendChild(crearCampo(
+      config.etiqueta,
+      config.tipo,
+      "nuevoValor",
+      datosUsuario.correo || datosUsuario.email || ""
+    ));
+    cont.appendChild(crearCampo(
+      "Contraseña actual para confirmar el cambio",
+      "password",
+      "claveActual"
+    ));
+  } else {
+    const valorActual = campo === "nacimiento"
+      ? obtenerNacimiento(datosUsuario)
+      : (datosUsuario[config.bd] || "");
+
+    cont.appendChild(crearCampo(
+      config.etiqueta,
+      config.tipo,
+      "nuevoValor",
+      valorActual
+    ));
+  }
+
+  $("modalEdicion").classList.add("visible");
+
+  const primerControl = cont.querySelector("input,select");
+  primerControl?.focus();
+}
+
+const cerrar = () => {
+  $("modalEdicion").classList.remove("visible");
+  $("camposEdicion").replaceChildren();
+  $("errorModal").textContent = "";
+  campoActual = null;
+};
+
+$("cancelarEdicion").onclick = cerrar;
+
+$("modalEdicion").onclick = e => {
+  if (e.target === $("modalEdicion")) cerrar();
+};
+
+["correo", "matricula", "nacimiento", "campus", "contrasena"].forEach(c => {
+  $(`editar${c.charAt(0).toUpperCase() + c.slice(1)}`).onclick = () => abrirEditor(c);
+});
+
+async function comprobarDuplicado(campo, valor) {
+  const resultado = await getDocs(query(collection(db, "usuarios"), where(campo, "==", valor)));
+  return resultado.docs.some(d => d.ref.path !== referenciaUsuario.path);
+}
+
+async function cambiarEmailEnAuthentication(nuevoCorreo, contrasenaActual) {
+  const usuarioAuth = auth.currentUser;
+  if (!usuarioAuth) return;
+
+  if (!usuarioAuth.email) {
+    throw new Error("La cuenta de Firebase Authentication no tiene correo para reautenticar.");
+  }
+
+  const credencial = EmailAuthProvider.credential(usuarioAuth.email, contrasenaActual);
+  await reauthenticateWithCredential(usuarioAuth, credencial);
+  await updateEmail(usuarioAuth, nuevoCorreo);
+}
+
+async function cambiarContrasenaEnAuthentication(contrasenaActual, nuevaContrasena) {
+  const usuarioAuth = auth.currentUser;
+
+  if (!usuarioAuth) {
+    throw new Error(
+      "Esta sesión inició mediante la consulta antigua de Firestore y no tiene una sesión de Firebase Authentication. Para cambiar la contraseña de forma segura, primero hay que actualizar login.html para iniciar sesión con Firebase Authentication. No se guardó ninguna contraseña en Firestore."
+    );
+  }
+
+  if (!usuarioAuth.email) {
+    throw new Error("La cuenta de Firebase Authentication no tiene correo asociado.");
+  }
+
+  const credencial = EmailAuthProvider.credential(usuarioAuth.email, contrasenaActual);
+  await reauthenticateWithCredential(usuarioAuth, credencial);
+  await updatePassword(usuarioAuth, nuevaContrasena);
+}
+
+$("guardarEdicion").onclick = async () => {
+  if (!campoActual) return;
+
+  const btn = $("guardarEdicion");
+  const err = $("errorModal");
+
+  err.textContent = "";
+
+  if (!cargaTerminada || !referenciaUsuario || !datosUsuario) {
+    err.textContent = "No se ha cargado el registro del tutor. Recarga la pantalla.";
+    return;
+  }
+
+  const campo = campoActual;
+  const bdClave = configuracion[campo].bd;
+
+  let nuevoVal = "";
+  let actualizaciones = {};
+
+  try {
+    if (campo === "contrasena") {
+      const actual = $("claveActual").value;
+      const nueva = $("nuevoValor").value;
+      const confirmar = $("confirmarValor").value;
+
+      if (!actual || !nueva || !confirmar) {
+        err.textContent = "Completa los tres campos de contraseña.";
+        return;
+      }
+
+      if (nueva.length < 8) {
+        err.textContent = "La nueva contraseña debe tener al menos 8 caracteres.";
+        return;
+      }
+
+      if (nueva !== confirmar) {
+        err.textContent = "La nueva contraseña y su confirmación no coinciden.";
+        return;
+      }
+
+      btn.disabled = true;
+      $("overlayCarga").classList.add("visible");
+      $("overlayCarga").textContent = "Actualizando contraseña segura...";
+
+      await cambiarContrasenaEnAuthentication(actual, nueva);
+
+      cerrar();
+      mostrarMensaje("Contraseña actualizada en Firebase Authentication.");
+      return;
+    }
+
+    const ctrl = $("nuevoValor");
+    nuevoVal = String(ctrl.value || "").trim();
+
+    if (!nuevoVal) {
+      err.textContent = "No dejes el campo vacío.";
+      return;
+    }
+
+    if (campo === "correo") {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nuevoVal)) {
+        err.textContent = "Escribe un correo electrónico válido.";
+        return;
+      }
+
+      if (await comprobarDuplicado("correo", nuevoVal)) {
+        err.textContent = "Ese correo ya está registrado en otra cuenta.";
+        return;
+      }
+
+      if (auth.currentUser && !$("claveActual")) {
+        err.textContent = "Vuelve a abrir el formulario e ingresa tu contraseña actual.";
+        return;
+      }
+    }
+
+    if (campo === "matricula" && await comprobarDuplicado("matricula", nuevoVal)) {
+      err.textContent = "Esa matrícula ya está registrada en otra cuenta.";
+      return;
+    }
+
+    if (campo === "nacimiento") {
+      const anio = Number(nuevoVal);
+      const actual = new Date().getFullYear();
+
+      if (!Number.isInteger(anio) || anio > actual - 15 || anio < actual - 100) {
+        err.textContent = "Selecciona un año de nacimiento válido.";
+        return;
+      }
+
+      nuevoVal = String(anio);
+      actualizaciones = {
+        nacimiento: nuevoVal,
+        anioNacimiento: nuevoVal
+      };
+    } else if (campo === "correo") {
+      if (auth.currentUser) {
+        const clave = $("claveActual")?.value || "";
+
+        if (!clave) {
+          err.textContent = "Escribe tu contraseña actual para confirmar el cambio de correo.";
+          return;
+        }
+
+        btn.disabled = true;
+        $("overlayCarga").classList.add("visible");
+        $("overlayCarga").textContent = "Actualizando correo de la cuenta...";
+
+        await cambiarEmailEnAuthentication(nuevoVal, clave);
+      }
+
+      actualizaciones = {
+        correo: nuevoVal,
+        email: nuevoVal
+      };
+    } else {
+      actualizaciones = {
+        [bdClave]: nuevoVal
+      };
+    }
+
+    btn.disabled = true;
+    $("overlayCarga").classList.add("visible");
+    $("overlayCarga").textContent = "Guardando cambios...";
+
+    await promesaCarga;
+
+    await updateDoc(referenciaUsuario, {
+      ...actualizaciones,
+      updatedAt: serverTimestamp()
+    });
+
+    Object.assign(datosUsuario, actualizaciones);
+    Object.assign(usuario, actualizaciones);
+
+    guardarSesion();
+    actualizarVista();
+    cerrar();
+
+    mostrarMensaje("Cambios guardados en la base de datos.");
+  } catch (error) {
+    console.error("Error al guardar cambios:", error);
+
+    const mensajesError = {
+      "auth/wrong-password": "La contraseña actual es incorrecta.",
+      "auth/invalid-credential": "No se pudo comprobar la contraseña actual.",
+      "auth/requires-recent-login": "Vuelve a iniciar sesión y repite el cambio.",
+      "auth/weak-password": "La nueva contraseña es demasiado débil.",
+      "auth/email-already-in-use": "Ese correo ya está asociado a otra cuenta de autenticación.",
+      "auth/invalid-email": "El correo electrónico no es válido."
+    };
+
+    err.textContent =
+      mensajesError[error.code] ||
+      error.message ||
+      "No se pudieron guardar los cambios.";
+  } finally {
+    btn.disabled = false;
+    $("overlayCarga").classList.remove("visible");
+    $("overlayCarga").textContent = "Guardando cambios...";
+  }
+};
+
+// Abre el selector de archivo de imagen al hacer clic en la cámara o en el lápiz inferior
+const abrirSelectorFoto = async () => {
+  if (!cargaTerminada) {
+    mostrarMensaje("Espera a que termine de cargar tu cuenta.", true);
+    return;
+  }
+
+  $("archivoFoto").click();
+};
+$("btnCamaraFoto").onclick = abrirSelectorFoto;
+$("btnEditarFoto").onclick = abrirSelectorFoto;
+
+$("archivoFoto").onchange = async () => {
+  const archivo = $("archivoFoto").files?.[0];
+  if (!archivo) return;
+
+  if (!archivo.type.startsWith("image/")) {
+    mostrarMensaje("Selecciona un archivo de imagen válido.", true);
+    $("archivoFoto").value = "";
+    return;
+  }
+
+  if (archivo.size > 5 * 1024 * 1024) {
+    mostrarMensaje("La fotografía no debe superar los 5 MB.", true);
+    $("archivoFoto").value = "";
+    return;
+  }
+
+  const botonFoto = $("btnEditarFoto");
+  botonFoto.disabled = true;
+
+  $("overlayCarga").textContent = "Subiendo fotografía...";
+  $("overlayCarga").classList.add("visible");
+
+  try {
+    await promesaCarga;
+
+    if (!referenciaUsuario) {
+      throw new Error("No se encontró el documento del tutor.");
+    }
+
+    const extension = (archivo.name.split(".").pop() || "jpg")
+      .replace(/[^a-zA-Z0-9]/g, "");
+
+    const ruta =
+      `perfiles/${matriculaSesion || idSeguro(usuario.correo)}/foto_${Date.now()}.${extension}`;
+
+    const referenciaArchivo = storageRef(storage, ruta);
+    const subida = await uploadBytes(referenciaArchivo, archivo, {
+      contentType: archivo.type || "image/jpeg"
+    });
+    const url = await getDownloadURL(subida.ref);
+
+    await updateDoc(referenciaUsuario, {
+      fotoPerfil: url,
+      fotoPerfilURL: url,
+      fotoPerfilPath: ruta,
+      updatedAt: serverTimestamp()
+    });
+
+    Object.assign(datosUsuario, {
+      fotoPerfil: url,
+      fotoPerfilURL: url,
+      fotoPerfilPath: ruta
+    });
+
+    Object.assign(usuario, {
+      fotoPerfil: url,
+      fotoPerfilURL: url,
+      fotoPerfilPath: ruta
+    });
+
+    guardarSesion();
+    actualizarVista();
+
+    mostrarMensaje("Fotografía guardada en Firebase Storage y Firestore.");
+  } catch (error) {
+    console.error("Error al subir la fotografía:", error);
+    mostrarMensaje("No se pudo guardar la fotografía. Revisa las reglas de Storage y Firestore.", true);
+  } finally {
+    botonFoto.disabled = false;
+    $("overlayCarga").classList.remove("visible");
+    $("overlayCarga").textContent = "Guardando cambios...";
+    $("archivoFoto").value = "";
+  }
+};
+
+function idSeguro(valor) {
+  return String(valor || "tutor").replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+
+$("btnMenuUsuario").onclick = () => {
+  $("menuUsuario").classList.toggle("visible");
+};
+
+$("btnNotificaciones").onclick = () => {
+  mostrarMensaje("No hay notificaciones.");
+};
+
+$("cerrarSesion").onclick = () => {
+  if (detenerUsuario) detenerUsuario();
+  sessionStorage.clear();
+  location.href = "../codigo%20principal/login.html";
+};
+
+window.onkeydown = e => {
+  if (e.key === "Escape") {
+    cerrar();
+    $("menuUsuario").classList.remove("visible");
+  }
+};
+
+window.addEventListener("click", e => {
+  if (!e.target.closest("#btnMenuUsuario") && !e.target.closest("#menuUsuario")) {
+    $("menuUsuario").classList.remove("visible");
+  }
+});
+</script>
+</body>
+</html>

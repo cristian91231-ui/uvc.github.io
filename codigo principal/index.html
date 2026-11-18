@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cargando | UV</title>
+  <style>
+    /* Reinicia márgenes de todos los elementos y ajusta el modelo de caja */
+    * { margin: 0; box-sizing: border-box; }
+
+    /* Ocupa toda la altura de la ventana y oculta barras de desplazamiento */
+    body { width: 100vw; height: 100vh; overflow: hidden; background: #f4f4f4; }
+
+    /* Imagen de fondo ajustada al 100% de la ventana sin recortar bordes */
+    .fondo { width: 100%; height: 100%; object-fit: fill; }
+
+    /* Contenedor gris de la barra de carga centrado horizontalmente */
+    .barra {
+      position: absolute; top: 73%; left: 50%; transform: translateX(-50%);
+      width: 90%; max-width: 320px; height: 9px;
+      background: #dce4ed; border-radius: 20px; overflow: hidden;
+    }
+
+    /* Relleno azul que se anima de 0% a 100% en 4 segundos */
+    .progreso { width: 0; height: 100%; background: #0878d1; animation: cargar 4s linear forwards; }
+
+    /* Definición de la animación de llenado de la barra */
+    @keyframes cargar { to { width: 100%; } }
+  </style>
+</head>
+<body>
+  <!-- Imagen de presentación de la pantalla de carga -->
+  <img src="../imagenes/principales/pantalla-carga.png" class="fondo" alt="UV">
+
+  <!-- Barra de progreso visual -->
+  <div class="barra"><div class="progreso"></div></div>
+
+  <script>
+    // Espera 4 segundos (4000 ms) y redirige a la pantalla de selección de perfil
+    setTimeout(function() {
+      window.location.replace("tutor-estudiante.html"); // Cambia de página sin guardar esta en el historial
+    }, 4000);
+  </script>
+</body>
+</html>

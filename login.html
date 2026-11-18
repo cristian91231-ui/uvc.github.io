@@ -96,7 +96,7 @@
 </head>
 <body>
 <!-- Imagen de fondo del login -->
-<img src="/imagenes/principales/iniciar-sesion.png" class="fondo" alt="Login UV">
+<img src="imagenes/principales/iniciar-sesion.png" class="fondo" alt="Login UV">
 
 <!-- Formulario de inicio de sesión superpuesto al diseño -->
 <form id="formLogin">
@@ -134,7 +134,7 @@
 
 <script type="module">
   // Importa la conexión a la base de datos de Firebase y las funciones de consulta de Firestore
-  import { db } from "../base de datos/firebase.js";
+  import { db } from "./base de datos/firebase.js";
   import { collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 
   // Recupera si el usuario eligió entrar como 'tutor' o 'estudiante'
@@ -189,7 +189,7 @@
         msjTutor.style.color = "green";
         msjTutor.textContent = "¡Correcto! Entrando...";
         setTimeout(() => {
-          window.location.href = "../perspectiva del tutor/pantalla_principal_tutor.html";
+          window.location.href = "./perspectiva del tutor/pantalla_principal_tutor.html";
         }, 700);
       } else {
         // Si la clave privada es incorrecta, avisa al usuario
@@ -243,7 +243,7 @@
         sessionStorage.setItem("usuarioUV", JSON.stringify(usuarioEncontrado));
         ponerMensaje("¡Bienvenido! Entrando...", "green");
         setTimeout(() => {
-          window.location.href = "../perspectiva del estudiante/pantalla_principal.html";
+          window.location.href = "./perspectiva del estudiante/pantalla_principal.html";
         }, 500);
       }
     } catch (error) {

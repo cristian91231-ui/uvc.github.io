@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendario | Estudiante UV</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; font-family: Arial, Helvetica, sans-serif; }
+    body { overflow: hidden; background: #f4faff; color: #15245f; }
+
+    .pantalla {
+      position: relative; width: 100vw; height: 100vh; min-width: 1000px; min-height: 560px; overflow: hidden;
+      background: #f4faff url("../imagenes/estudiantes/calendario_estudiante.png") center/100% 100% no-repeat;
+    }
+
+    .zona { position: absolute; z-index: 20; display: block; border: 0; background: transparent; cursor: pointer; text-decoration: none; }
+    .zona:focus-visible { outline: 2px solid #0877ee; outline-offset: 2px; border-radius: 8px; }
+
+    /* Accesos rápidos del menú izquierdo */
+    .nav-inicio     { left: 0; top: 15.7%; width: 9.3%; height: 4.2%; }
+    .nav-avisos     { left: 0; top: 21.1%; width: 9.3%; height: 4.2%; }
+    .nav-calendario { left: 0; top: 26.4%; width: 9.3%; height: 4.2%; }
+    .nav-chat       { left: 0; top: 31.4%; width: 9.3%; height: 4.2%; }
+    .nav-perfil     { left: 0; top: 37.0%; width: 9.3%; height: 4.2%; }
+    .nav-config     { left: 0; top: 41.7%; width: 9.3%; height: 4.2%; }
+    .volver         { left: 13.1%; top: 7.4%; width: 18%; height: 5.5%; }
+
+    /* Oculta el botón "Crear evento" del boceto del tutor */
+    .ocultar-crear {
+      position: absolute; z-index: 12; left: 82.8%; top: 13.2%; width: 16.3%; height: 8.4%;
+      background: linear-gradient(105deg, rgba(246, 250, 255, .96), rgba(247, 251, 255, .99));
+      pointer-events: none;
+    }
+
+    /* Cabecera superior */
+    .notificaciones { left: 85.5%; top: .6%; width: 3.5%; height: 5.5%; border-radius: 10px; }
+    .perfil-foto    { left: 89.5%; top: .3%; width: 3.8%; height: 5.5%; border-radius: 50%; }
+    .menu-flecha    { left: 96.5%; top: .4%; width: 2.5%; height: 5.2%; border-radius: 6px; }
+    .notificaciones:hover, .perfil-foto:hover, .menu-flecha:hover { background: rgba(20, 120, 230, .08); }
+
+    .info-usuario-top {
+      position: absolute; z-index: 21; left: 92.5%; top: .2%; width: 4%; height: 5.5%;
+      display: flex; flex-direction: column; justify-content: center; color: #14294e;
+      pointer-events: none; line-height: 1.15; overflow: hidden;
+    }
+    .info-usuario-top strong { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .info-usuario-top small { font-size: 11px; color: #73849a; white-space: nowrap; }
+
+    .menu-usuario-panel {
+      position: absolute; z-index: 60; right: 1.5%; top: 7%; display: none; min-width: 190px;
+      padding: 13px; border: 1px solid #dce7f4; border-radius: 11px; background: #fff;
+      color: #17345e; box-shadow: 0 10px 28px #0002;
+    }
+    .menu-usuario-panel.visible, .panel-notif.visible, .mensaje.visible { display: block; }
+    .menu-usuario-panel strong { display: block; max-width: 260px; margin-bottom: 3px; overflow-wrap: anywhere; font-size: 13px; }
+    .menu-usuario-panel small { display: block; margin-bottom: 10px; color: #73849a; }
+    .menu-usuario-panel button {
+      width: 100%; padding: 9px 10px; border: 0; border-radius: 7px;
+      background: #fff0f0; color: #b42318; cursor: pointer; text-align: left; font-weight: 700;
+    }
+
+    .panel-notif {
+      position: absolute; z-index: 55; right: 10%; top: 7.5%; width: min(350px, 85vw);
+      max-height: 400px; overflow-y: auto; display: none; border-radius: 12px;
+      background: #fff; color: #17345e; border: 1px solid #dce7f4; box-shadow: 0 10px 30px #0002;
+    }
+    .notif-header { position: sticky; top: 0; padding: 14px 16px; border-bottom: 1px solid #e7edf5; background: #fff; font-size: 14px; font-weight: 700; }
+    .notif-vacia { padding: 20px; color: #7d8da5; text-align: center; font-size: 12px; }
+    .badge-notif {
+      position: absolute; top: 10%; right: 12%; display: none; min-width: 16px; height: 16px;
+      align-items: center; justify-content: center; padding: 0 4px; border-radius: 20px;
+      background: #e53935; color: #fff; font-size: 10px; font-weight: 700; pointer-events: none;
+    }
+    .badge-notif.visible { display: flex; }
+
+    /* Botones para cambiar al mes anterior o siguiente (transparentes porque la imagen de fondo ya tiene las flechas < y >) */
+    #mesAnterior, #mesSiguiente {
+      position: absolute; z-index: 25; top: 29.2%; width: 4.1%; height: 5.5%;
+      border: 0; border-radius: 12px; background: transparent; color: transparent; font-size: 0; cursor: pointer;
+    }
+    #mesAnterior { left: 28.8%; }
+    #mesSiguiente { left: 49.8%; }
+    #mesAnterior:hover, #mesSiguiente:hover { background: rgba(197, 222, 250, .28); }
+
+    #mesAnio {
+      position: absolute; z-index: 24; left: 35%; top: 29.45%; width: 12.5%; height: 4.5%; margin: 0;
+      display: flex; align-items: center; justify-content: center; text-align: center;
+      color: #14245f; font-size: clamp(15px, 1.35vw, 22px); font-weight: bold; white-space: nowrap;
+    }
+
+    /* Encabezados de los días y cuadrícula */
+    .dias-semana {
+      position: absolute; z-index: 24; left: 14.68%; top: 36.75%; width: 54.07%; height: 5.25%;
+      display: grid; grid-template-columns: repeat(7, 1fr); align-items: center;
+    }
+    .dias-semana span { text-align: center; color: #29436a; font-weight: bold; font-size: clamp(11px, .9vw, 15px); }
+
+    .rejilla {
+      position: absolute; z-index: 24; left: 14.68%; top: 42%; width: 54.07%; height: 45.1%;
+      display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); grid-template-rows: repeat(6, minmax(0, 1fr));
+    }
+    .dia {
+      position: relative; min-width: 0; min-height: 0; border: 0; background: transparent;
+      text-align: left; padding: 6px 7px; color: #29385f; font-size: clamp(11px, .95vw, 16px); cursor: pointer;
+    }
+    .dia:hover { background: rgba(200, 226, 255, .28); }
+    .dia.seleccionado { outline: 2px solid #0877ee; outline-offset: -2px; border-radius: 9px; background: rgba(194, 222, 255, .28); color: #0877ee; font-weight: bold; }
+    .dia.hoy:not(.seleccionado) .numero {
+      background: #0877ee; color: #fff; border-radius: 50%; width: 24px; height: 24px;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+    .dia.es-festivo:not(.seleccionado) { background: rgba(229, 57, 53, .06); border-radius: 8px; }
+    .dia.es-festivo:not(.hoy):not(.seleccionado) .numero { color: #c62828; font-weight: bold; }
+    .dia.es-vacaciones:not(.seleccionado):not(.es-festivo) { background: rgba(245, 158, 11, .07); border-radius: 8px; }
+    .dia.vacio { cursor: default; }
+    .etiqueta-dia-uv {
+      position: absolute; top: 5px; right: 5px; max-width: calc(100% - 34px);
+      padding: 1px 4px; border-radius: 4px; font-size: 8.5px; font-weight: 700;
+      line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      pointer-events: none;
+    }
+    .puntos { display: flex; gap: 4px; flex-wrap: wrap; margin: 5px 0 0 2px; }
+    .punto { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
+    .dia .cantidad-eventos { position: absolute; right: 6px; bottom: 5px; color: #647b9c; font-size: 9px; }
+
+    /* Simbología del calendario oficial UV */
+    .leyenda-uv {
+      position: absolute; z-index: 24; left: 14.68%; top: 88.2%; width: 54.07%;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 14px;
+      padding: 5px 10px; border-radius: 10px; background: rgba(255, 255, 255, .86);
+      border: 1px solid #dde8f6; font-size: clamp(9.5px, .75vw, 12px); color: #29436a;
+    }
+    .leyenda-item { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-weight: 600; }
+    .leyenda-punto { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Lista de próximos eventos (solo lectura) */
+    .proximos {
+      position: absolute; z-index: 25; left: 73.5%; top: 34.5%; width: 23.5%; height: 55%;
+      overflow-y: auto; padding: 5px 4px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .encabezado-proximos {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px;
+      padding: 6px 10px; border-radius: 9px; background: rgba(225, 239, 255, .85);
+      color: #143566; font-size: 11.5px; font-weight: 700;
+    }
+    .btn-ver-mes {
+      border: 0; border-radius: 6px; padding: 3px 7px; background: #0877ee; color: #fff;
+      font-size: 10.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    .btn-ver-mes:hover { background: #0560c4; }
+    .evento {
+      display: grid; grid-template-columns: 11px minmax(0, 1fr); gap: 9px; align-items: start;
+      padding: 12px 10px; border: 1px solid #e4edf8; border-radius: 13px;
+      background: rgba(239, 246, 255, .94); min-height: 65px; cursor: pointer;
+    }
+    .evento:hover { background: #eaf4ff; border-color: #c8ddf5; }
+    .evento-color { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; }
+    .evento-info { min-width: 0; }
+    .evento-titulo { font-size: clamp(11px, .9vw, 15px); font-weight: bold; line-height: 1.25; overflow-wrap: anywhere; color: #172557; }
+    .evento-fecha { font-size: clamp(10px, .75vw, 13px); color: #627397; margin-top: 4px; }
+    .evento-materia {
+      display: inline-block; font-size: 10px; font-weight: 700; color: #2b4c7e;
+      background: rgba(210, 228, 250, .55); padding: 2px 7px; border-radius: 6px;
+      margin-top: 4px; white-space: normal; overflow-wrap: anywhere;
+    }
+    .evento-descripcion { font-size: 11px; color: #526987; margin-top: 5px; line-height: 1.35; overflow-wrap: anywhere; }
+    .sin-eventos { font-size: 13px; color: #7483a1; padding: 12px; background: rgba(239, 246, 255, .94); border-radius: 11px; line-height: 1.4; margin: 0; }
+
+    /* Notificación flotante (Toast) */
+    .mensaje {
+      position: fixed; z-index: 80; bottom: 18px; left: 50%; transform: translateX(-50%);
+      display: none; max-width: 90%; background: #073967; color: #fff; padding: 12px 17px;
+      border-radius: 9px; font-size: 13px; box-shadow: 0 5px 18px #0002;
+    }
+
+    /* Responsivo */
+    @media (max-width: 1100px) {
+      .pantalla { min-width: 900px; }
+      .evento { grid-template-columns: 9px minmax(0, 1fr); padding: 8px; }
+      .proximos { gap: 6px; }
+    }
+    @media (max-width: 700px) {
+      body { overflow: auto; }
+      .pantalla { width: 100%; min-width: 900px; height: 100vh; min-height: 650px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="pantalla" id="pantalla">
+    <!-- Menú lateral del estudiante -->
+    <a class="zona nav-inicio"     href="pantalla_principal.html"        aria-label="Inicio"        title="Inicio"></a>
+    <a class="zona nav-avisos"     href="avisos_estudiantes.html"        aria-label="Avisos"        title="Avisos"></a>
+    <a class="zona nav-calendario" href="calendario_estudiante.html"     aria-label="Calendario"    title="Calendario"></a>
+    <a class="zona nav-chat"       href="chats_estudiantes.html"         aria-label="Chat"          title="Chat"></a>
+    <a class="zona nav-perfil"     href="perfil_estudiantes.html"        aria-label="Perfil"        title="Perfil"></a>
+    <a class="zona nav-config"     href="configuracion_estudiante.html" aria-label="Configuracion" title="Configuracion"></a>
+    <a class="zona volver"         href="pantalla_principal.html"        aria-label="Volver al inicio" title="Volver al inicio"></a>
+
+    <!-- Accesos superiores -->
+    <button class="zona notificaciones" id="btnNotificaciones" type="button" aria-label="Ver notificaciones" title="Notificaciones">
+      <span class="badge-notif" id="badgeNotif">0</span>
+    </button>
+
+    <a class="zona perfil-foto" href="perfil_estudiantes.html" aria-label="Abrir perfil del estudiante" title="Mi perfil"></a>
+
+    <div class="info-usuario-top">
+      <strong id="nombreEstudianteTop">Estudiante</strong>
+      <small>Estudiante</small>
+    </div>
+
+    <button class="zona menu-flecha" id="menuFlecha" type="button" title="Menu de usuario" aria-label="Abrir menu de usuario" aria-haspopup="true" aria-expanded="false"></button>
+
+    <!-- Oculta el botón "Crear evento" del boceto del tutor -->
+    <div class="ocultar-crear" aria-hidden="true"></div>
+
+    <!-- Navegación mensual (los botones cubren las flechas del diseño de fondo) -->
+    <button id="mesAnterior" type="button" aria-label="Mes anterior" title="Mes anterior"></button>
+    <h2 id="mesAnio">Mes</h2>
+    <button id="mesSiguiente" type="button" aria-label="Mes siguiente" title="Mes siguiente"></button>
+
+    <div class="dias-semana" aria-hidden="true">
+      <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+    </div>
+
+    <div class="rejilla" id="rejillaCalendario" aria-label="Calendario mensual"></div>
+
+    <!-- Simbología del Calendario Oficial UV -->
+    <div class="leyenda-uv" aria-label="Simbología del calendario">
+      <span class="leyenda-item"><i class="leyenda-punto" style="background:#e53935"></i>Festivo / Suspensión</span>
+      <span class="leyenda-item"><i class="leyenda-punto" style="background:#008a3b"></i>Calendario UV</span>
+      <span class="leyenda-item"><i class="leyenda-punto" style="background:#0d8abc"></i>Exámenes UV</span>
+      <span class="leyenda-item"><i class="leyenda-punto" style="background:#f59e0b"></i>Vacaciones UV</span>
+      <span class="leyenda-item"><i class="leyenda-punto" style="background:#6366f1"></i>Trámites UV</span>
+      <span class="leyenda-item"><i class="leyenda-punto" style="background:#2494f4"></i>Materias / Tutor</span>
+    </div>
+
+    <section class="proximos" id="listaEventos" aria-label="Proximos eventos" aria-live="polite">
+      <p class="sin-eventos">Cargando eventos...</p>
+    </section>
+
+    <!-- Menús superiores -->
+    <div class="menu-usuario-panel" id="menuUsuarioPanel">
+      <strong id="nombreEstudianteMenu">Estudiante</strong>
+      <small>Estudiante</small>
+      <button id="cerrarSesion" type="button">Cerrar sesión</button>
+    </div>
+
+    <div class="panel-notif" id="panelNotificaciones">
+      <div class="notif-header">Notificaciones</div>
+      <div class="notif-vacia">Las fechas del calendario se actualizan automáticamente.</div>
+    </div>
+
+    <div class="mensaje" id="mensaje" role="status" aria-live="polite"></div>
+  </main>
+
+  <script type="module">
+    import { db } from "../base%20de%20datos/firebase.js";
+    import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+
+    const $ = id => document.getElementById(id);
+
+    const MESES = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+
+    const COLORES = {
+      "Pensamiento Crítico": "#8558ef",
+      "Metodología de la Programación": "#2494f4",
+      "Lógica": "#35bb45",
+      "Álgebra Lineal": "#bd75e8",
+      "Fundamento de la Ingeniería de Software": "#f28aa5",
+      "Fundamentos de Ingeniería de Sistemas": "#f28aa5",
+      "Literacidad Digital": "#e9ad36",
+      "Todas las materias": "#2494f4",
+      "Día festivo / Suspensión de labores": "#e53935",
+      "Calendario oficial UV": "#008a3b",
+      "Evaluaciones / Exámenes UV": "#0d8abc",
+      "Periodo vacacional UV": "#f59e0b",
+      "Trámites escolares UV": "#6366f1"
+    };
+
+    let eventosTutor = [];
+    let eventos = [];
+    let fechaVista = new Date();
+    let fechaSeleccionada = fechaLocal(new Date());
+    let filtroDiaActivo = false;
+    let detenerEventos = null;
+    let temporizadorMensaje = null;
+    const cacheOficialesUV = new Map();
+
+    // --- Generador de fechas del Calendario Oficial de la Universidad Veracruzana (UV) ---
+    function nEsimoDiaSemana(anio, mesIdx, diaSemana, n) {
+      const primero = new Date(anio, mesIdx, 1);
+      const offset = (diaSemana - primero.getDay() + 7) % 7;
+      return 1 + offset + (n - 1) * 7;
+    }
+
+    function calcularDomingoPascua(anio) {
+      const a = anio % 19;
+      const b = Math.floor(anio / 100);
+      const c = anio % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const mes = Math.floor((h + l - 7 * m + 114) / 31) - 1;
+      const dia = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(anio, mes, dia);
+    }
+
+    function sumarDias(fechaBase, dias) {
+      const d = new Date(fechaBase.getFullYear(), fechaBase.getMonth(), fechaBase.getDate() + dias);
+      return fechaLocal(d);
+    }
+
+    function fmtFecha(anio, mes, dia) {
+      return `${anio}-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+    }
+
+    function obtenerEventosOficialesUVPorAnio(anio) {
+      if (cacheOficialesUV.has(anio)) return cacheOficialesUV.get(anio);
+
+      const lunesConstitucion = nEsimoDiaSemana(anio, 1, 1, 1);
+      const lunesInicioFebJul = nEsimoDiaSemana(anio, 1, 1, 2);
+      const lunesBenitoJuarez = nEsimoDiaSemana(anio, 2, 1, 3);
+      const miercolesFinFebJul = nEsimoDiaSemana(anio, 5, 3, 1);
+      const lunesOrdJunio = nEsimoDiaSemana(anio, 5, 1, 2);
+      const lunesInicioAgoEne = nEsimoDiaSemana(anio, 7, 1, 3);
+      const lunesRevolucion = nEsimoDiaSemana(anio, 10, 1, 3);
+      const viernesFinAgoEne = nEsimoDiaSemana(anio, 11, 5, 1);
+      const lunesOrdDiciembre = nEsimoDiaSemana(anio, 11, 1, 2);
+
+      const pascua = calcularDomingoPascua(anio);
+      const inicioSemanaSanta = sumarDias(pascua, -6);
+      const juevesSanto = sumarDias(pascua, -3);
+      const viernesSanto = sumarDias(pascua, -2);
+      const finSemanaSanta = sumarDias(pascua, 5);
+      const regresoSemanaSanta = sumarDias(pascua, 8);
+
+      const lista = [
+        // ENERO
+        {
+          fecha: fmtFecha(anio, 1, 1),
+          titulo: "Año Nuevo (Suspensión de labores)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día inhábil oficial en el calendario escolar y laboral de la Universidad Veracruzana."
+        },
+        {
+          fecha: fmtFecha(anio, 1, 6),
+          titulo: "Reanudación de labores UV",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Regreso de actividades académicas y administrativas tras el periodo vacacional de invierno."
+        },
+        {
+          fecha: fmtFecha(anio, 1, 7),
+          titulo: "Exámenes Extraordinarios (Periodo Agosto - Enero)",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Inicio del periodo de evaluaciones extraordinarias del semestre Agosto-Enero."
+        },
+        {
+          fecha: fmtFecha(anio, 1, 15),
+          titulo: "Cierre de Exámenes Extraordinarios",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Conclusión de evaluaciones extraordinarias y entrega de actas."
+        },
+        {
+          fecha: fmtFecha(anio, 1, 19),
+          titulo: "Exámenes a Título de Suficiencia e Intersemestral",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Aplicación de evaluaciones a título de suficiencia y cursos del periodo intersemestral de invierno."
+        },
+        {
+          fecha: fmtFecha(anio, 1, 30),
+          titulo: "Conclusión del Ciclo Agosto - Enero",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Fin oficial del semestre Agosto-Enero en todas las modalidades UV."
+        },
+
+        // FEBRERO
+        {
+          fecha: fmtFecha(anio, 2, lunesConstitucion),
+          titulo: "Suspensión de labores (Día de la Constitución)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día inhábil oficial en conmemoración del 5 de febrero, Aniversario de la Constitución Mexicana."
+        },
+        {
+          fecha: fmtFecha(anio, 2, lunesConstitucion + 1),
+          titulo: "Inscripciones en línea UV (Febrero - Julio)",
+          materia: "Trámites escolares UV",
+          etiquetaCorta: "Trámites",
+          descripcion: "Proceso de reinscripción en línea y validación de horario en el portal MiUV."
+        },
+        {
+          fecha: fmtFecha(anio, 2, lunesInicioFebJul),
+          titulo: "Inicio de clases (Periodo Febrero - Julio)",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Arranque oficial de clases del semestre Febrero-Julio en la Universidad Veracruzana."
+        },
+        {
+          fecha: fmtFecha(anio, 2, 22),
+          titulo: "Día del Agrónomo / Fundación FESAPAUV",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Suspensión de labores académicas contemplada en el calendario oficial de la UV."
+        },
+
+        // MARZO
+        {
+          fecha: fmtFecha(anio, 3, 2),
+          titulo: "Límite de altas y bajas (Febrero - Julio)",
+          materia: "Trámites escolares UV",
+          etiquetaCorta: "Trámites",
+          descripcion: "Último día para movimientos de inscripción de experiencias educativas."
+        },
+        {
+          fecha: fmtFecha(anio, 3, lunesBenitoJuarez),
+          titulo: "Suspensión de labores (Natalicio de Benito Juárez)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día inhábil oficial en conmemoración del 21 de marzo."
+        },
+        {
+          fecha: fmtFecha(anio, 3, lunesBenitoJuarez + 1),
+          titulo: "Suspensión de labores contractual UV",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día inhábil otorgado en el calendario oficial de la Universidad Veracruzana."
+        },
+
+        // SEMANA SANTA (Marzo / Abril según año)
+        {
+          fecha: inicioSemanaSanta,
+          titulo: "Inicio de Vacaciones de Semana Santa UV",
+          materia: "Periodo vacacional UV",
+          etiquetaCorta: "Vacaciones",
+          descripcion: "Inicio del receso vacacional de primavera en todas las regiones de la UV."
+        },
+        {
+          fecha: juevesSanto,
+          titulo: "Jueves Santo (Suspensión de labores UV)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Suspensión tradicional y contractual de Semana Santa en la UV."
+        },
+        {
+          fecha: viernesSanto,
+          titulo: "Viernes Santo (Suspensión de labores UV)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Suspensión tradicional y contractual de Semana Santa en la UV."
+        },
+        {
+          fecha: finSemanaSanta,
+          titulo: "Fin de Vacaciones de Semana Santa UV",
+          materia: "Periodo vacacional UV",
+          etiquetaCorta: "Vacaciones",
+          descripcion: "Conclusión del periodo vacacional de primavera."
+        },
+        {
+          fecha: regresoSemanaSanta,
+          titulo: "Reanudación de clases tras Semana Santa",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Regreso a actividades académicas y administrativas en la UV."
+        },
+
+        // ABRIL
+        {
+          fecha: fmtFecha(anio, 4, 20),
+          titulo: "Evaluaciones Parciales y Tutoría Académica",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Seguimiento académico de medio semestre y segunda sesión de tutoría UV."
+        },
+        {
+          fecha: fmtFecha(anio, 4, 30),
+          titulo: "Registro a Convocatoria de Nuevo Ingreso UV",
+          materia: "Trámites escolares UV",
+          etiquetaCorta: "Trámites",
+          descripcion: "Periodo de registro y carga de documentos para aspirantes a la Universidad Veracruzana."
+        },
+
+        // MAYO
+        {
+          fecha: fmtFecha(anio, 5, 1),
+          titulo: "Día del Trabajo (Suspensión de labores)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Suspensión oficial de clases y labores administrativas en la UV."
+        },
+        {
+          fecha: fmtFecha(anio, 5, 5),
+          titulo: "Conmemoración de la Batalla de Puebla",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día inhábil marcado en el calendario escolar y laboral de la UV."
+        },
+        {
+          fecha: fmtFecha(anio, 5, 10),
+          titulo: "Día de las Madres (Suspensión UV)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día inhábil institucional en la Universidad Veracruzana."
+        },
+        {
+          fecha: fmtFecha(anio, 5, 15),
+          titulo: "Día del Maestro (Suspensión de labores)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Suspensión oficial de labores académicas y administrativas por el Día del Docente."
+        },
+        {
+          fecha: fmtFecha(anio, 5, 22),
+          titulo: "Feria Internacional del Libro Universitario (FILU UV)",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Actividades culturales, académicas y editoriales de la FILU de la Universidad Veracruzana."
+        },
+        {
+          fecha: fmtFecha(anio, 5, 23),
+          titulo: "Día del Estudiante Universitario",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Conmemoración del Día del Estudiante en las facultades de la UV."
+        },
+        {
+          fecha: fmtFecha(anio, 5, 30),
+          titulo: "Aplicación del Examen de Admisión UV",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Jornada de evaluación de ingreso a nivel Licenciatura y TSU en la UV."
+        },
+
+        // JUNIO
+        {
+          fecha: fmtFecha(anio, 6, miercolesFinFebJul),
+          titulo: "Fin de clases (Periodo Febrero - Julio)",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Conclusión de clases regulares del semestre Febrero-Julio."
+        },
+        {
+          fecha: fmtFecha(anio, 6, lunesOrdJunio),
+          titulo: "Inicio de Exámenes Ordinarios (Febrero - Julio)",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Inicio del periodo oficial de evaluaciones ordinarias finales."
+        },
+        {
+          fecha: fmtFecha(anio, 6, lunesOrdJunio + 11),
+          titulo: "Fin de Exámenes Ordinarios (Febrero - Julio)",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Conclusión de exámenes ordinarios y cierre de actas."
+        },
+        {
+          fecha: fmtFecha(anio, 6, 24),
+          titulo: "Exámenes Extraordinarios (Febrero - Julio)",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Aplicación de evaluaciones extraordinarias del semestre Febrero-Julio."
+        },
+        {
+          fecha: fmtFecha(anio, 6, 30),
+          titulo: "Suspensión de labores UV",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día inhábil oficial contemplado en el calendario laboral de la UV."
+        },
+
+        // JULIO
+        {
+          fecha: fmtFecha(anio, 7, 1),
+          titulo: "Suspensión de labores UV",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día inhábil oficial en el calendario escolar y laboral de la UV."
+        },
+        {
+          fecha: fmtFecha(anio, 7, 2),
+          titulo: "Inicio de Periodo Intersemestral de Verano y Título de Suficiencia",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Cursos intensivos de verano y aplicación de exámenes a título de suficiencia."
+        },
+        {
+          fecha: fmtFecha(anio, 7, 14),
+          titulo: "Inicio de Vacaciones de Verano UV",
+          materia: "Periodo vacacional UV",
+          etiquetaCorta: "Vacaciones",
+          descripcion: "Inicio del periodo vacacional de verano para la comunidad universitaria UV."
+        },
+        {
+          fecha: fmtFecha(anio, 7, 31),
+          titulo: "Fin de Vacaciones de Verano UV",
+          materia: "Periodo vacacional UV",
+          etiquetaCorta: "Vacaciones",
+          descripcion: "Conclusión del receso vacacional de verano en la Universidad Veracruzana."
+        },
+
+        // AGOSTO
+        {
+          fecha: fmtFecha(anio, 8, 3),
+          titulo: "Publicación de Resultados y Trámites de Nuevo Ingreso UV",
+          materia: "Trámites escolares UV",
+          etiquetaCorta: "Trámites",
+          descripcion: "Reanudación de labores administrativas e inscripción de nuevo ingreso."
+        },
+        {
+          fecha: fmtFecha(anio, 8, 10),
+          titulo: "Inscripciones en línea UV (Periodo Agosto - Enero)",
+          materia: "Trámites escolares UV",
+          etiquetaCorta: "Trámites",
+          descripcion: "Proceso de reinscripción y selección de experiencias educativas en MiUV."
+        },
+        {
+          fecha: fmtFecha(anio, 8, lunesInicioAgoEne),
+          titulo: "Inicio de clases (Periodo Agosto - Enero)",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Inicio oficial del ciclo escolar Agosto-Enero y bienvenida de nuevo ingreso UV."
+        },
+
+        // SEPTIEMBRE
+        {
+          fecha: fmtFecha(anio, 9, 4),
+          titulo: "Límite de altas y bajas (Agosto - Enero)",
+          materia: "Trámites escolares UV",
+          etiquetaCorta: "Trámites",
+          descripcion: "Cierre del periodo de ajustes de carga académica en el sistema escolar UV."
+        },
+        {
+          fecha: fmtFecha(anio, 9, 11),
+          titulo: "Aniversario de la Universidad Veracruzana (1944)",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Conmemoración institucional de la fundación de la Universidad Veracruzana."
+        },
+        {
+          fecha: fmtFecha(anio, 9, 16),
+          titulo: "Día de la Independencia (Suspensión de labores)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Suspensión oficial de clases y labores por el Aniversario de la Independencia de México."
+        },
+
+        // OCTUBRE
+        {
+          fecha: fmtFecha(anio, 10, 12),
+          titulo: "Segunda Sesión de Tutoría Académica UV",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Revisión de avance académico y acompañamiento con el tutor asignado."
+        },
+        {
+          fecha: fmtFecha(anio, 10, 19),
+          titulo: "Evaluaciones Parciales (Periodo Agosto - Enero)",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Periodo de evaluaciones parciales y entrega de proyectos de medio semestre."
+        },
+        {
+          fecha: fmtFecha(anio, 10, 30),
+          titulo: "Muestra de Altares y Tradiciones de Todos Santos UV",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Actividades culturales tradicionales previas al Día de Muertos en las regiones UV."
+        },
+
+        // NOVIEMBRE
+        {
+          fecha: fmtFecha(anio, 11, 1),
+          titulo: "Día de Todos los Santos (Suspensión UV)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Suspensión tradicional de labores en la Universidad Veracruzana por Todos Santos."
+        },
+        {
+          fecha: fmtFecha(anio, 11, 2),
+          titulo: "Día de los Fieles Difuntos (Día de Muertos)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Suspensión oficial de labores académicas y administrativas en la UV."
+        },
+        {
+          fecha: fmtFecha(anio, 11, lunesRevolucion),
+          titulo: "Suspensión de labores (Revolución Mexicana)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día inhábil oficial en conmemoración del 20 de noviembre, Aniversario de la Revolución Mexicana."
+        },
+        {
+          fecha: fmtFecha(anio, 11, 20),
+          titulo: "Aniversario de la Revolución Mexicana",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Conmemoración cívica del inicio de la Revolución Mexicana."
+        },
+        {
+          fecha: fmtFecha(anio, 11, 25),
+          titulo: "Tercera Tutoría Académica y Preinscripción UV",
+          materia: "Trámites escolares UV",
+          etiquetaCorta: "Trámites",
+          descripcion: "Orientación para la planeación de experiencias educativas del próximo periodo."
+        },
+
+        // DICIEMBRE
+        {
+          fecha: fmtFecha(anio, 12, viernesFinAgoEne),
+          titulo: "Fin de clases (Periodo Agosto - Enero)",
+          materia: "Calendario oficial UV",
+          etiquetaCorta: "UV",
+          descripcion: "Conclusión de clases regulares del semestre Agosto-Enero en la UV."
+        },
+        {
+          fecha: fmtFecha(anio, 12, lunesOrdDiciembre),
+          titulo: "Inicio de Exámenes Ordinarios (Agosto - Enero)",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Inicio del periodo oficial de evaluaciones ordinarias finales del semestre."
+        },
+        {
+          fecha: fmtFecha(anio, 12, 12),
+          titulo: "Suspensión tradicional de labores UV (12 de diciembre)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día inhábil contemplado en el calendario laboral de la Universidad Veracruzana."
+        },
+        {
+          fecha: fmtFecha(anio, 12, lunesOrdDiciembre + 8),
+          titulo: "Fin de Exámenes Ordinarios (Agosto - Enero)",
+          materia: "Evaluaciones / Exámenes UV",
+          etiquetaCorta: "Exámenes",
+          descripcion: "Cierre de evaluaciones ordinarias previas al periodo vacacional de invierno."
+        },
+        {
+          fecha: fmtFecha(anio, 12, 18),
+          titulo: "Inicio de Vacaciones de Invierno UV",
+          materia: "Periodo vacacional UV",
+          etiquetaCorta: "Vacaciones",
+          descripcion: "Inicio del periodo vacacional decembrino para estudiantes, docentes y personal UV."
+        },
+        {
+          fecha: fmtFecha(anio, 12, 25),
+          titulo: "Navidad (Suspensión de labores)",
+          materia: "Día festivo / Suspensión de labores",
+          etiquetaCorta: "Festivo",
+          descripcion: "Día festivo oficial de suspensión de labores."
+        },
+        {
+          fecha: fmtFecha(anio, 12, 31),
+          titulo: "Fin de Año (Periodo vacacional de invierno UV)",
+          materia: "Periodo vacacional UV",
+          etiquetaCorta: "Vacaciones",
+          descripcion: "Receso vacacional de invierno de la Universidad Veracruzana."
+        }
+      ].map((ev, idx) => ({
+        ...ev,
+        id: `uv-${anio}-${idx}`,
+        esOficialUV: true,
+        creadoPor: "calendario-oficial-uv"
+      }));
+
+      cacheOficialesUV.set(anio, lista);
+      return lista;
+    }
+
+    function actualizarEventosCombinados() {
+      const anioBase = fechaVista.getFullYear();
+      const oficiales = [
+        ...obtenerEventosOficialesUVPorAnio(anioBase - 1),
+        ...obtenerEventosOficialesUVPorAnio(anioBase),
+        ...obtenerEventosOficialesUVPorAnio(anioBase + 1)
+      ];
+      eventos = [...oficiales, ...eventosTutor];
+    }
+
+    // --- Sesión del estudiante ---
+    function cargarNombreSesion() {
+      try {
+        const sesion = JSON.parse(sessionStorage.getItem("usuarioUV") || "null");
+        if (!sesion) return;
+
+        const candidatos = [sesion.nombre, sesion.nombreCompleto, sesion.nombres, sesion.nombrePerfil, sesion.displayName];
+        let nombre = candidatos.find(v => typeof v === "string" && v.trim());
+
+        if (!nombre) {
+          const correo = sesion.correo || sesion.email || "";
+          nombre = correo.includes("@") ? correo.split("@")[0] : "Estudiante";
+        }
+
+        nombre = String(nombre).trim();
+        $("nombreEstudianteTop").textContent = nombre.split(/\s+/)[0];
+        $("nombreEstudianteMenu").textContent = nombre;
+      } catch (err) {
+        console.error("No se pudo mostrar el nombre de la sesión:", err);
+      }
+    }
+    cargarNombreSesion();
+
+    // --- Utilidades de fecha y DOM ---
+    function crearNodo(tag, props = {}, hijos = []) {
+      const el = document.createElement(tag);
+      Object.assign(el, props);
+      hijos.forEach(h => el.append(h));
+      return el;
+    }
+
+    function fechaLocal(fecha) {
+      const y = fecha.getFullYear();
+      const m = String(fecha.getMonth() + 1).padStart(2, "0");
+      const d = String(fecha.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function fechaAObjeto(valor) {
+      if (!valor) return new Date(NaN);
+      const [y, m, d] = String(valor).split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function fechaBonita(valor) {
+      const fecha = fechaAObjeto(valor);
+      return Number.isNaN(fecha.getTime())
+        ? "Fecha por confirmar"
+        : fecha.toLocaleDateString("es-MX", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+    }
+
+    function colorDe(evento) {
+      return COLORES[evento.materia] || "#2494f4";
+    }
+
+    function ordenar(lista) {
+      return [...lista].sort((a, b) =>
+        (a.fecha || "").localeCompare(b.fecha || "") ||
+        (a.hora || "").localeCompare(b.hora || "") ||
+        (a.titulo || "").localeCompare(b.titulo || "")
+      );
+    }
+
+    function mostrarMensaje(texto) {
+      const el = $("mensaje");
+      el.textContent = texto;
+      el.classList.add("visible");
+      clearTimeout(temporizadorMensaje);
+      temporizadorMensaje = setTimeout(() => el.classList.remove("visible"), 4000);
+    }
+
+    // --- Renderizado del calendario mensual ---
+    function renderizarCalendario() {
+      actualizarEventosCombinados();
+
+      const anio = fechaVista.getFullYear();
+      const mes = fechaVista.getMonth();
+      const hoy = fechaLocal(new Date());
+
+      $("mesAnio").textContent = `${MESES[mes]} ${anio}`;
+
+      const primerDia = new Date(anio, mes, 1);
+      const diasMes = new Date(anio, mes + 1, 0).getDate();
+      const desplazamiento = (primerDia.getDay() + 6) % 7;
+
+      const rejilla = $("rejillaCalendario");
+      rejilla.replaceChildren();
+
+      for (let i = 0; i < 42; i++) {
+        const numeroDia = i - desplazamiento + 1;
+
+        if (numeroDia < 1 || numeroDia > diasMes) {
+          const vacio = crearNodo("div", { className: "dia vacio" });
+          vacio.setAttribute("aria-hidden", "true");
+          rejilla.appendChild(vacio);
+          continue;
+        }
+
+        const fecha = fechaLocal(new Date(anio, mes, numeroDia));
+        const seleccionada = fecha === fechaSeleccionada;
+        const delDia = eventos.filter(ev => ev.fecha === fecha);
+        const tieneFestivo = delDia.some(ev => ev.materia === "Día festivo / Suspensión de labores");
+        const tieneVacaciones = delDia.some(ev => ev.materia === "Periodo vacacional UV");
+
+        const celda = crearNodo("button", {
+          type: "button",
+          className: `dia${seleccionada ? " seleccionado" : ""}${fecha === hoy ? " hoy" : ""}${tieneFestivo ? " es-festivo" : ""}${tieneVacaciones ? " es-vacaciones" : ""}`
+        }, [crearNodo("span", { className: "numero", textContent: numeroDia })]);
+
+        celda.setAttribute("aria-label", `Ver eventos del ${fechaBonita(fecha)}`);
+        celda.setAttribute("aria-pressed", String(seleccionada));
+
+        if (delDia.length) {
+          celda.title = delDia.map(ev => `• ${ev.titulo}`).join("\n");
+
+          const oficialDestacado = delDia.find(ev => ev.esOficialUV);
+          if (oficialDestacado) {
+            const c = colorDe(oficialDestacado);
+            const etiqueta = crearNodo("span", {
+              className: "etiqueta-dia-uv",
+              textContent: oficialDestacado.etiquetaCorta || "UV"
+            });
+            etiqueta.style.background = `${c}1f`;
+            etiqueta.style.color = c;
+            celda.appendChild(etiqueta);
+          }
+
+          const puntos = crearNodo("div", { className: "puntos" });
+          delDia.slice(0, 4).forEach(ev => {
+            const punto = crearNodo("i", { className: "punto", title: ev.titulo || "Evento" });
+            punto.style.background = colorDe(ev);
+            puntos.appendChild(punto);
+          });
+          celda.appendChild(puntos);
+
+          if (delDia.length > 4) {
+            celda.appendChild(crearNodo("span", { className: "cantidad-eventos", textContent: `+${delDia.length - 4}` }));
+          }
+        }
+
+        celda.addEventListener("click", () => {
+          if (fechaSeleccionada === fecha && filtroDiaActivo) {
+            filtroDiaActivo = false;
+          } else {
+            fechaSeleccionada = fecha;
+            filtroDiaActivo = true;
+          }
+          renderizarCalendario();
+          renderizarEventos();
+        });
+
+        rejilla.appendChild(celda);
+      }
+    }
+
+    // --- Lista lateral de eventos ---
+    function renderizarEventos() {
+      actualizarEventosCombinados();
+
+      const contenedor = $("listaEventos");
+      contenedor.replaceChildren();
+
+      const hoyObj = new Date();
+      const hoy = fechaLocal(hoyObj);
+      const anioVista = fechaVista.getFullYear();
+      const mesVista = fechaVista.getMonth();
+      const prefijoMes = `${anioVista}-${String(mesVista + 1).padStart(2, "0")}-`;
+      const esMesActual = anioVista === hoyObj.getFullYear() && mesVista === hoyObj.getMonth();
+
+      let lista = [];
+      let tituloSeccion = "";
+
+      if (filtroDiaActivo) {
+        const delDia = ordenar(eventos.filter(ev => ev.fecha === fechaSeleccionada));
+        if (delDia.length) {
+          lista = delDia;
+          tituloSeccion = `Eventos del ${fechaAObjeto(fechaSeleccionada).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}`;
+        } else {
+          lista = ordenar(eventos.filter(ev => (ev.fecha || "").startsWith(prefijoMes)));
+          tituloSeccion = `Sin eventos el día ${fechaAObjeto(fechaSeleccionada).getDate()} · ${MESES[mesVista]}`;
+        }
+      } else if (esMesActual) {
+        const proximos = ordenar(eventos.filter(ev => ev.fecha >= hoy)).slice(0, 14);
+        lista = proximos.length ? proximos : ordenar(eventos.filter(ev => (ev.fecha || "").startsWith(prefijoMes)));
+        tituloSeccion = `Próximas fechas y eventos UV`;
+      } else {
+        lista = ordenar(eventos.filter(ev => (ev.fecha || "").startsWith(prefijoMes)));
+        tituloSeccion = `Calendario UV · ${MESES[mesVista]} ${anioVista}`;
+      }
+
+      const encabezado = crearNodo("div", { className: "encabezado-proximos" }, [
+        crearNodo("span", { textContent: tituloSeccion })
+      ]);
+
+      if (filtroDiaActivo) {
+        const btnMes = crearNodo("button", {
+          type: "button",
+          className: "btn-ver-mes",
+          textContent: "Ver mes"
+        });
+        btnMes.addEventListener("click", () => {
+          filtroDiaActivo = false;
+          renderizarEventos();
+        });
+        encabezado.appendChild(btnMes);
+      }
+      contenedor.appendChild(encabezado);
+
+      if (!lista.length) {
+        contenedor.appendChild(crearNodo("p", {
+          className: "sin-eventos",
+          textContent: `No hay eventos registrados para ${MESES[mesVista]} ${anioVista}.`
+        }));
+        return;
+      }
+
+      lista.forEach(ev => {
+        const c = colorDe(ev);
+        const color = crearNodo("i", { className: "evento-color" });
+        color.style.background = c;
+
+        const etiquetaMateria = crearNodo("div", {
+          className: "evento-materia",
+          textContent: ev.materia || "Todas las materias"
+        });
+        etiquetaMateria.style.background = `${c}1a`;
+        etiquetaMateria.style.color = c;
+
+        const info = crearNodo("div", { className: "evento-info" }, [
+          crearNodo("div", { className: "evento-titulo", textContent: ev.titulo || "Evento sin título" }),
+          crearNodo("div", { className: "evento-fecha", textContent: `${fechaBonita(ev.fecha)}${ev.hora ? " · " + ev.hora : ""}` }),
+          etiquetaMateria
+        ]);
+
+        if (ev.descripcion) {
+          info.appendChild(crearNodo("div", { className: "evento-descripcion", textContent: ev.descripcion }));
+        }
+
+        const fila = crearNodo("article", { className: "evento", tabIndex: 0 }, [color, info]);
+        fila.setAttribute("role", "button");
+        fila.setAttribute("aria-label", `${ev.titulo}, ${fechaBonita(ev.fecha)}`);
+
+        const activar = () => seleccionarFechaEvento(ev.fecha);
+        fila.addEventListener("click", activar);
+        fila.addEventListener("keydown", e => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            activar();
+          }
+        });
+
+        contenedor.appendChild(fila);
+      });
+    }
+
+    function seleccionarFechaEvento(fecha) {
+      fechaSeleccionada = fecha;
+      filtroDiaActivo = true;
+      const obj = fechaAObjeto(fecha);
+      fechaVista = new Date(obj.getFullYear(), obj.getMonth(), 1);
+      renderizarCalendario();
+      renderizarEventos();
+    }
+
+    function cambiarMes(diferencia) {
+      const diaActual = fechaAObjeto(fechaSeleccionada).getDate();
+      const siguiente = new Date(fechaVista.getFullYear(), fechaVista.getMonth() + diferencia, 1);
+      const ultimoDia = new Date(siguiente.getFullYear(), siguiente.getMonth() + 1, 0).getDate();
+
+      fechaVista = siguiente;
+      fechaSeleccionada = fechaLocal(new Date(siguiente.getFullYear(), siguiente.getMonth(), Math.min(diaActual, ultimoDia)));
+      filtroDiaActivo = false;
+
+      renderizarCalendario();
+      renderizarEventos();
+    }
+
+    $("mesAnterior").addEventListener("click", () => cambiarMes(-1));
+    $("mesSiguiente").addEventListener("click", () => cambiarMes(1));
+
+    // --- Sincronización en tiempo real con Firestore (solo lectura) ---
+    function iniciarCalendario() {
+      renderizarCalendario();
+      renderizarEventos();
+
+      detenerEventos = onSnapshot(
+        collection(db, "eventosCalendario"),
+        snap => {
+          eventosTutor = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(ev => Boolean(ev.creadoPor && ev.fecha && ev.titulo));
+
+          renderizarCalendario();
+          renderizarEventos();
+        },
+        err => {
+          console.error("Error al consultar eventos del calendario:", err);
+          eventosTutor = [];
+          renderizarCalendario();
+          renderizarEventos();
+        }
+      );
+    }
+
+    // --- Menús de cabecera y cierre ---
+    function cerrarMenus() {
+      $("menuUsuarioPanel").classList.remove("visible");
+      $("panelNotificaciones").classList.remove("visible");
+      $("menuFlecha").setAttribute("aria-expanded", "false");
+    }
+
+    $("menuFlecha").addEventListener("click", e => {
+      e.stopPropagation();
+      $("panelNotificaciones").classList.remove("visible");
+      const abierto = $("menuUsuarioPanel").classList.toggle("visible");
+      $("menuFlecha").setAttribute("aria-expanded", String(abierto));
+    });
+
+    $("btnNotificaciones").addEventListener("click", e => {
+      e.stopPropagation();
+      $("menuUsuarioPanel").classList.remove("visible");
+      $("menuFlecha").setAttribute("aria-expanded", "false");
+      $("panelNotificaciones").classList.toggle("visible");
+    });
+
+    // Botón para cerrar sesión y regresar a la pantalla de inicio de sesión
+    $("cerrarSesion").addEventListener("click", () => {
+      detenerEventos?.();
+      ["usuarioUV", "perfilSeleccionadoUV", "tipoUsuario"].forEach(k => sessionStorage.removeItem(k));
+      window.location.href = "../codigo principal/login.html";
+    });
+
+    document.addEventListener("click", e => {
+      if (!e.target.closest("#menuUsuarioPanel, #menuFlecha, #panelNotificaciones, #btnNotificaciones")) {
+        cerrarMenus();
+      }
+    });
+
+    window.addEventListener("keydown", e => {
+      if (e.key === "Escape") cerrarMenus();
+    });
+
+    window.addEventListener("beforeunload", () => detenerEventos?.());
+
+    iniciarCalendario();
+  </script>
+</body>
+</html>

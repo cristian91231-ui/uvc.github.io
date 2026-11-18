@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Foro UV | Inicio</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; font-family: Arial, sans-serif; }
+    body { overflow: hidden; background: #f5faff; }
+
+    .pantalla {
+      position: relative; width: 100vw; height: 100vh; min-height: 520px;
+      overflow: hidden; background: #f5faff;
+    }
+
+    /* Fondo original */
+    .fondo-pantalla-img {
+      position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%;
+      object-fit: fill; pointer-events: none; user-select: none;
+    }
+
+    .info-usuario-cabecera {
+      position: absolute; z-index: 10; right: 4.2%; top: 2.2%;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; pointer-events: none;
+    }
+    .cabecera-nombre { display: block; color: #173a63; font-size: 14px; font-weight: bold; line-height: 1.2; }
+    .cabecera-rol { display: block; color: #7188a1; font-size: 11px; }
+
+    /* Clase base para áreas y botones interactivos transparentes sobre el diseño */
+    .zona { position: absolute; z-index: 10; padding: 0; border: 0; background: transparent; cursor: pointer; }
+
+    /* Indicador lateral de sección activa */
+    .seleccion {
+      position: absolute; z-index: 2; left: 1.1%; top: 15.7%; width: 9%; height: 4.5%;
+      border-radius: 11px; background: transparent; pointer-events: none; transition: top .18s ease;
+    }
+
+    /* Botones del menú lateral izquierdo alineados exactamente con cada icono del fondo */
+    .nav-inicio     { left: .4%; top: 15.7%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-avisos     { left: .4%; top: 21.1%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-calendario { left: .4%; top: 26.4%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-chats      { left: .4%; top: 31.4%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-perfil     { left: .4%; top: 37.0%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-config     { left: .4%; top: 41.7%; width: 10.0%; height: 4.5%; border-radius: 8px; }
+    .nav-inicio:hover, .nav-avisos:hover, .nav-calendario:hover, .nav-chats:hover, .nav-perfil:hover, .nav-config:hover {
+      background: rgba(255, 255, 255, .10);
+    }
+
+    /* Barra de búsqueda superior */
+    .buscador {
+      position: absolute; z-index: 8; left: 12.8%; top: 1.6%; width: 43.4%; height: 5%;
+      padding: 0 12px 0 34px; border: 0; border-radius: 12px; outline: none;
+      background: transparent; color: #102d55; font-size: clamp(10px, .85vw, 16px); font-weight: 700;
+    }
+    .buscador::placeholder { color: #607a9d; opacity: 1; }
+    .buscador:focus { background: rgba(255, 255, 255, .98); box-shadow: 0 0 0 2px #92c7ff; }
+
+    /* Saludo con el nombre del estudiante dentro de la caja de nueva publicación */
+    .saludo-publicacion {
+      position: absolute; z-index: 10; left: 19.5%; top: 8.2%;
+      color: #173a63; font-size: 14px; font-weight: bold;
+    }
+
+    /* Área de texto para redactar la publicación */
+    .texto-publicacion {
+      position: absolute; z-index: 8; left: 19.5%; top: 11.3%; width: 55%; height: 5.1%;
+      padding: 7px 5px; border: 0; outline: none; resize: none; border-radius: 8px;
+      background: transparent; color: #102d55; font-size: clamp(11px, 1vw, 18px); font-weight: 700;
+    }
+    .texto-publicacion::placeholder { color: #7188a1; opacity: 1; }
+    .texto-publicacion:focus { background: rgba(255, 255, 255, .98); box-shadow: 0 0 0 2px #92c7ff; }
+
+    /* Botones de acción de publicación alineados con los botones del boceto (Foto, GIF, Encuesta, Archivo, Publicar) */
+    .boton-foto     { left: 19.8%; top: 17.2%; width: 7.6%;  height: 4.7%; border-radius: 10px; }
+    .boton-gif      { left: 28.4%; top: 17.2%; width: 7.3%;  height: 4.7%; border-radius: 10px; }
+    .boton-encuesta { left: 36.6%; top: 17.2%; width: 8.8%;  height: 4.7%; border-radius: 10px; }
+    .boton-archivo  { left: 46.3%; top: 17.2%; width: 8.5%;  height: 4.7%; border-radius: 10px; }
+    .boton-publicar { left: 85.9%; top: 17.0%; width: 11.1%; height: 4.9%; border-radius: 10px; }
+
+    /* Resaltado al pasar el cursor sobre los botones de publicación */
+    .boton-foto:hover, .boton-gif:hover, .boton-encuesta:hover, .boton-archivo:hover, .boton-publicar:hover {
+      background: rgba(0, 119, 238, .10); border-radius: 10px;
+    }
+
+    .entrada-archivo, .entrada-adjunto-comentario { display: none; }
+
+    .vista-previa {
+      position: absolute; z-index: 15; left: 20%; top: 23.5%; max-width: 45%;
+      display: none; align-items: center; gap: 10px; padding: 10px; border-radius: 10px;
+      background: #fff; box-shadow: 0 3px 12px rgba(35, 93, 145, .12); color: #23466e;
+      font-size: 13px; overflow-wrap: anywhere;
+    }
+    .vista-previa.visible, .preview-adjunto-comentario.visible, .badge-notificaciones.visible { display: flex; }
+    .vista-previa img { max-width: 100px; max-height: 70px; object-fit: contain; border-radius: 6px; }
+    .quitar-archivo { border: 0; background: transparent; cursor: pointer; font-size: 20px; }
+
+    /* Encuesta */
+    .panel-encuesta {
+      position: absolute; z-index: 20; display: none; left: 20%; top: 24%;
+      width: min(540px, 60%); padding: 16px; border: 1px solid #dbe8f5;
+      border-radius: 12px; background: #fff; box-shadow: 0 7px 25px rgba(20, 60, 100, .15);
+    }
+    .panel-encuesta.visible { display: grid; gap: 9px; }
+    .panel-encuesta input { width: 100%; padding: 10px; border: 1px solid #d9e5f2; border-radius: 7px; }
+    .botones-encuesta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .botones-encuesta button { padding: 5px; border: 0; background: transparent; color: #0877ee; cursor: pointer; }
+    .publicar-encuesta { padding: 10px; border: 0; border-radius: 8px; background: #0877ee; color: #fff; cursor: pointer; }
+
+    /* Feed */
+    .feed {
+      position: absolute; z-index: 5; left: 12.7%; right: 1.6%; top: 25%; bottom: 1%;
+      overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 6px;
+    }
+    .post {
+      position: relative; padding: 16px; padding-top: 54px; border: 1px solid #e1edf7;
+      border-radius: 13px; background: rgba(255, 255, 255, .97);
+      box-shadow: 0 3px 12px rgba(35, 93, 145, .09); color: #173a63; overflow-wrap: anywhere;
+    }
+    .post-cabecera { display: flex; align-items: center; gap: 10px; font-weight: bold; font-size: 14px; }
+    .cabecera-titulos { display: flex; flex-direction: column; }
+    .cabecera-titulos small { color: #7188a1; font-size: 11px; font-weight: normal; }
+    .avatar-mini {
+      display: grid; place-items: center; flex-shrink: 0; border-radius: 50%;
+      background: #9db4d0; color: #fff; font-weight: bold; width: 34px; height: 34px;
+    }
+    .post-texto { margin: 12px 0; white-space: pre-wrap; font-size: 14px; }
+    .post > img { display: block; max-width: min(100%, 380px); max-height: 260px; margin-top: 10px; border-radius: 9px; }
+    .archivo-publicado { display: inline-block; margin-top: 10px; color: #0877ee; overflow-wrap: anywhere; }
+    .post-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .post-acciones button { padding: 7px 10px; border: 0; border-radius: 7px; background: #edf6fd; color: #24476d; cursor: pointer; }
+
+    /* Comentarios */
+    .comentarios-publicacion {
+      display: none; margin-top: 12px; padding: 13px; border: 1px solid #e1edf7;
+      border-radius: 11px; background: #f7fbff;
+    }
+    .comentarios-publicacion.visible, .panel-notificaciones.visible, .menu-perfil.visible { display: block; }
+    .lista-comentarios { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+    .sin-comentarios { margin: 0 0 10px; color: #7188a1; font-size: 12px; }
+    .comentario { display: flex; align-items: flex-start; gap: 9px; }
+    .comentario-avatar {
+      flex: 0 0 30px; width: 30px; height: 30px; display: grid; place-items: center;
+      border-radius: 50%; background: #9db4d0; color: #fff; font-size: 12px; font-weight: 700;
+    }
+    .comentario-contenido {
+      flex: 1; min-width: 0; padding: 9px 11px; border: 1px solid #e5eff8;
+      border-radius: 10px; background: #fff; overflow-wrap: anywhere;
+    }
+    .comentario-autor { display: block; margin-bottom: 4px; color: #173a63; font-size: 12px; font-weight: 700; }
+    .comentario-texto { margin: 0; color: #294767; font-size: 13px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .comentario-fecha { display: block; margin-top: 6px; color: #8192a6; font-size: 10px; }
+    .comentario-adjunto { display: block; max-width: min(100%, 320px); max-height: 260px; margin-top: 9px; border-radius: 8px; object-fit: contain; }
+
+    .form-comentario { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; align-items: end; gap: 8px; }
+    .entrada-comentario {
+      grid-column: 1 / -1; width: 100%; min-height: 40px; max-height: 120px; resize: vertical;
+      padding: 10px 12px; border: 1px solid #d7e5f2; border-radius: 10px; outline: none;
+      background: #fff; color: #173a63; font-size: 13px;
+    }
+    .entrada-comentario:focus { border-color: #87bdf3; box-shadow: 0 0 0 2px rgba(8, 119, 238, .10); }
+
+    .adjuntar-comentario, .enviar-comentario {
+      min-height: 37px; padding: 0 11px; border: 0; border-radius: 9px; font-size: 12px;
+      font-weight: 600; cursor: pointer; white-space: nowrap; width: 100px;
+    }
+    .adjuntar-comentario { background: #e7f2fc; color: #24476d; }
+    .adjuntar-comentario:hover { background: #d8eafa; }
+    .enviar-comentario { background: #0877ee; color: #fff; }
+    .enviar-comentario:hover { background: #0067d8; }
+    .enviar-comentario:disabled { opacity: .65; cursor: wait; }
+
+    .preview-adjunto-comentario {
+      display: none; grid-column: 1 / -1; align-items: center; gap: 9px; padding: 8px;
+      border: 1px solid #e1edf7; border-radius: 9px; background: #fff; color: #294767;
+      font-size: 12px; overflow-wrap: anywhere;
+    }
+    .preview-adjunto-comentario img { max-width: 90px; max-height: 65px; object-fit: contain; border-radius: 6px; }
+    .quitar-adjunto-comentario { margin-left: auto; border: 0; background: transparent; color: #24476d; font-size: 20px; cursor: pointer; }
+
+    .boton-eliminar-publicacion {
+      position: absolute; top: 12px; right: 14px; z-index: 5; padding: 8px 12px;
+      border: 1px solid #ffd5d9; border-radius: 8px; background: #fff5f5;
+      color: #d12f40; font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .boton-eliminar-publicacion:hover { background: #d12f40; color: #fff; }
+
+    /* Encuesta publicada */
+    .encuesta-publicada { margin-top: 12px; padding: 13px; border: 1px solid #dce8f4; border-radius: 10px; background: #f8fbff; }
+    .encuesta-pregunta { margin: 0 0 10px; color: #173a63; font-weight: 700; }
+    .encuesta-opcion-contenedor { margin-top: 8px; }
+    .opcion-encuesta {
+      width: 100%; padding: 10px 12px; border: 1px solid #cfe0f0; border-radius: 8px;
+      background: #fff; color: #173a63; text-align: left; cursor: pointer; transition: .15s;
+    }
+    .opcion-encuesta:hover:not(:disabled) { border-color: #0877ee; background: #f0f7ff; }
+    .opcion-encuesta:disabled { cursor: default; }
+    .opcion-encuesta.seleccionada { border-color: #0877ee; box-shadow: 0 0 0 1px #0877ee inset; font-weight: bold; }
+    .encuesta-resultado { display: none; margin-top: 5px; }
+    .encuesta-resultado.visible { display: block; }
+    .encuesta-barra-fondo { height: 7px; overflow: hidden; border-radius: 8px; background: #e2edf7; }
+    .encuesta-barra { width: 0; height: 100%; border-radius: 8px; background: #0877ee; transition: width .2s ease; }
+    .encuesta-dato, .encuesta-pie { display: block; margin-top: 5px; color: #7188a1; font-size: 11px; }
+    .encuesta-pie { font-size: 12px; }
+
+    /* Botones superiores derechos: Foto de perfil, Flecha de menú y Campana de notificaciones */
+    .zona-perfil        { left: 88.7%; top: 1%;   width: 3.7%; height: 5.8%; border-radius: 50%; }
+    .zona-flecha-perfil { left: 96.5%; top: 1%;   width: 2.8%; height: 5.8%; border-radius: 8px; }
+    .zona-notificaciones{ left: 84.8%; top: 1.6%; width: 3.2%; height: 4.6%; border-radius: 8px; }
+    .zona-perfil:hover, .zona-flecha-perfil:hover, .zona-notificaciones:hover {
+      background: rgba(20, 120, 230, .08);
+    }
+
+    .badge-notificaciones {
+      position: absolute; z-index: 30; left: 86.5%; top: .7%; min-width: 18px; height: 18px;
+      padding: 0 5px; border-radius: 20px; display: none; align-items: center; justify-content: center;
+      background: #e53935; color: #fff; font-size: 10px; font-weight: 700; pointer-events: none;
+    }
+    .panel-notificaciones {
+      display: none; position: absolute; z-index: 35; right: 8%; top: 7%; width: min(360px, 35vw);
+      max-height: 55vh; overflow-y: auto; border: 1px solid #e1eaf4; border-radius: 12px;
+      background: #fff; box-shadow: 0 7px 24px #0002; color: #173a63;
+    }
+    .panel-notificaciones h3 { margin: 0; padding: 13px 15px; border-bottom: 1px solid #e7eef6; font-size: 14px; }
+    .notificacion-item {
+      display: block; width: 100%; padding: 12px 14px; border: 0; border-bottom: 1px solid #edf2f8;
+      background: #fff; color: #173a63; text-align: left; cursor: pointer;
+    }
+    .notificacion-item:hover { background: #f0f7ff; }
+    .notificacion-item strong { display: block; margin-bottom: 4px; font-size: 12px; }
+    .notificacion-item span { display: block; color: #7188a1; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .notificacion-vacia { padding: 18px; color: #7188a1; text-align: center; font-size: 12px; }
+
+    .menu-perfil {
+      display: none; position: absolute; z-index: 40; right: 1.8%; top: 7%; width: 190px;
+      padding: 10px; border: 1px solid #e1eaf4; border-radius: 12px; background: #fff; box-shadow: 0 5px 18px #0002;
+    }
+    .menu-perfil strong { display: block; padding: 8px; overflow-wrap: anywhere; }
+    .menu-perfil button {
+      display: block; width: 100%; padding: 9px; text-align: left; border: 0;
+      border-radius: 7px; background: transparent; color: #173a63; cursor: pointer;
+    }
+    .menu-perfil button:hover { background: #edf6fd; }
+
+    .mensaje {
+      position: absolute; z-index: 50; right: 20px; bottom: 20px; max-width: 360px;
+      padding: 12px 16px; border-radius: 9px; color: #fff; background: #073967;
+      box-shadow: 0 5px 18px #0002; font-size: 14px; opacity: 0; transform: translateY(8px);
+      pointer-events: none; transition: .2s;
+    }
+    .mensaje.visible { opacity: 1; transform: translateY(0); }
+
+    .overlay-carga {
+      display: none; position: absolute; inset: 0; background: rgba(255, 255, 255, .7);
+      z-index: 100; justify-content: center; align-items: center; flex-direction: column;
+      color: #0755b8; font-weight: bold;
+    }
+    .overlay-carga.visible { display: flex; }
+    .spinner {
+      width: 40px; height: 40px; border: 4px solid #cde0f5; border-top-color: #0755b8;
+      border-radius: 50%; animation: giro 1s linear infinite; margin-bottom: 10px;
+    }
+    @keyframes giro { to { transform: rotate(360deg); } }
+
+    @media (max-width: 700px) {
+      .buscador, .texto-publicacion { font-size: 11px; }
+      .panel-encuesta { width: 75%; }
+      .feed { left: 11%; }
+      .boton-eliminar-publicacion { font-size: 10px; padding: 7px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="pantalla" id="pantalla">
+    <!-- Fondo original de la interfaz UV -->
+    <img class="fondo-pantalla-img" id="fondoPantalla" alt="" aria-hidden="true">
+    <div class="seleccion" id="seleccion"></div>
+
+    <div class="info-usuario-cabecera">
+      <span class="cabecera-nombre" id="cabeceraNombre">Estudiante</span>
+      <span class="cabecera-rol" id="cabeceraRol">Estudiante</span>
+    </div>
+
+    <!-- Navegación lateral -->
+    <button class="zona nav-inicio" data-seccion="Inicio" aria-label="Inicio" title="Inicio"></button>
+    <a href="avisos_estudiantes.html"        class="zona nav-avisos"     aria-label="Avisos"        title="Avisos"></a>
+    <a href="calendario_estudiante.html" class="zona nav-calendario" aria-label="Calendario" title="Calendario"></a>
+    <a href="chats_estudiantes.html"         class="zona nav-chats"      aria-label="Chats"         title="Chats"></a>
+    <a href="perfil_estudiantes.html"        class="zona nav-perfil"     aria-label="Perfil"        title="Perfil"></a>
+    <a href="configuracion_estudiante.html" class="zona nav-config"     aria-label="Configuración" title="Configuración"></a>
+
+    <!-- Publicar -->
+    <input class="buscador" id="buscar" type="search" placeholder="Buscar publicaciones, temas o personas..." autocomplete="off">
+    <div class="saludo-publicacion" id="saludoPublicacion">Hola</div>
+    <textarea class="texto-publicacion" id="textoPublicacion" maxlength="1500" placeholder="¿Qué quieres compartir con la comunidad UV?"></textarea>
+
+    <button class="zona boton-foto"     id="btnFoto"     aria-label="Adjuntar foto"     title="Foto"></button>
+    <button class="zona boton-gif"      id="btnGif"      aria-label="Adjuntar GIF"      title="GIF"></button>
+    <button class="zona boton-encuesta" id="btnEncuesta" aria-label="Crear encuesta"    title="Encuesta"></button>
+    <button class="zona boton-archivo"  id="btnArchivo"  aria-label="Adjuntar archivo"  title="Archivo"></button>
+    <button class="zona boton-publicar" id="btnPublicar" aria-label="Publicar"          title="Publicar"></button>
+
+    <input class="entrada-archivo" id="inputFoto"    type="file" accept="image/*">
+    <input class="entrada-archivo" id="inputGif"     type="file" accept="image/gif,.gif">
+    <input class="entrada-archivo" id="inputArchivo" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip">
+
+    <div class="vista-previa" id="vistaPrevia"></div>
+
+    <!-- Panel de encuesta -->
+    <div class="panel-encuesta" id="panelEncuesta">
+      <strong>Crear encuesta</strong>
+      <input id="pregunta" maxlength="180" placeholder="Escribe tu pregunta">
+      <input class="opcion" maxlength="100" placeholder="Opción 1">
+      <input class="opcion" maxlength="100" placeholder="Opción 2">
+
+      <div class="botones-encuesta">
+        <button type="button" id="agregarOpcion">+ Agregar opción</button>
+        <button type="button" id="cerrarEncuesta">Cancelar</button>
+      </div>
+      <button class="publicar-encuesta" type="button" id="publicarEncuesta">Agregar encuesta</button>
+    </div>
+
+    <section class="feed" id="feed" aria-live="polite"></section>
+
+    <!-- Menú perfil y notificaciones -->
+    <a class="zona zona-perfil" id="btnPerfil" href="perfil_estudiantes.html" aria-label="Ir a mi perfil" title="Mi perfil"></a>
+    <button class="zona zona-flecha-perfil" id="btnFlechaPerfil" type="button" aria-label="Abrir menú de usuario" aria-expanded="false" title="Menú"></button>
+    <button class="zona zona-notificaciones" id="btnNotificaciones" type="button" aria-label="Notificaciones" title="Notificaciones"></button>
+    <span class="badge-notificaciones" id="badgeNotificaciones" aria-live="polite"></span>
+
+    <div class="panel-notificaciones" id="panelNotificaciones" aria-label="Notificaciones del estudiante">
+      <h3>Notificaciones del estudiante</h3>
+      <div id="listaNotificaciones">
+        <div class="notificacion-vacia">Cargando notificaciones...</div>
+      </div>
+    </div>
+
+    <div class="menu-perfil" id="menuPerfil">
+      <strong id="nombreUsuario">Estudiante</strong>
+      <button type="button" id="miPerfil">Mi perfil</button>
+      <button type="button" id="cerrarSesion">Cerrar sesión</button>
+    </div>
+
+    <div class="mensaje" id="mensaje" role="status" aria-live="polite"></div>
+
+    <div class="overlay-carga" id="overlayCarga">
+      <div class="spinner"></div>
+      <span id="textoCarga">Subiendo archivo...</span>
+    </div>
+  </main>
+
+  <!-- Carga de fondo con respaldo -->
+  <script>
+    (() => {
+      const fondo = document.getElementById("fondoPantalla");
+      if (!fondo) return;
+
+      const rutas = [
+        "../imagenes/estudiantes/pantalla_principal.png",
+        "../imagenes/estudiantes/pantalla_principal.jpg",
+        "../imagenes/estudiantes/pantalla_principal.png",
+        "../imagenes/estudiantes/pantalla_principal.jpg",
+        "imagenes/estudiantes/pantalla_principal.png",
+        "imagenes/estudiantes/pantalla_principal.jpg"
+      ];
+      let i = 0;
+
+      fondo.addEventListener("error", () => {
+        if (i < rutas.length) {
+          fondo.src = rutas[i++];
+        } else {
+          console.error("No se encontró pantalla_principal.png/.jpg en imagenes/estudiantes/");
+          fondo.style.display = "none";
+        }
+      });
+
+      fondo.src = rutas[i++];
+    })();
+  </script>
+
+  <!-- Firebase y lógica del foro -->
+  <script type="module">
+    import { db, storage } from "../base%20de%20datos/firebase.js";
+    import {
+      collection, addDoc, onSnapshot, query, orderBy, serverTimestamp,
+      deleteDoc, doc, where, updateDoc, runTransaction
+    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+    import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
+
+    const $ = id => document.getElementById(id);
+
+    const selector = $("seleccion");
+    const feed = $("feed");
+    const previewPublicacion = $("vistaPrevia");
+    const panelEncuesta = $("panelEncuesta");
+    const overlayCarga = $("overlayCarga");
+
+    let archivoPublicacion = null;
+    let tipoArchivoPublicacion = "";
+    let urlPreviewPublicacion = null;
+    let encuestaBorrador = null;
+    let temporizadorMensaje = null;
+
+    const escuchasComentarios = new Map();
+
+    // --- Sesión ---
+    let infoUsuario = {};
+    try {
+      infoUsuario = JSON.parse(sessionStorage.getItem("usuarioUV") || "{}");
+    } catch { /* fallback vacío */ }
+
+    const nombreEstudiante = String(infoUsuario.nombre || infoUsuario.correo || "Estudiante").trim();
+    const idEstudiante = String(infoUsuario.matricula || infoUsuario.correo || "usuario-local").trim();
+
+    $("nombreUsuario").textContent = nombreEstudiante;
+    $("cabeceraNombre").textContent = nombreEstudiante;
+    $("saludoPublicacion").textContent = `Hola, ${nombreEstudiante}`;
+
+    // --- Utilidades ---
+    function crearNodo(tag, props = {}, hijos = []) {
+      const el = document.createElement(tag);
+      Object.assign(el, props);
+      hijos.forEach(h => el.append(h));
+      return el;
+    }
+
+    const inicial = nombre => String(nombre || "E").trim().charAt(0).toUpperCase() || "E";
+
+    function mostrarMensaje(texto, color = "#073967") {
+      const msj = $("mensaje");
+      msj.textContent = texto;
+      msj.style.backgroundColor = color;
+      msj.classList.add("visible");
+      clearTimeout(temporizadorMensaje);
+      temporizadorMensaje = setTimeout(() => msj.classList.remove("visible"), 2800);
+    }
+
+    function formatearFecha(fecha) {
+      if (!fecha) return "";
+      try {
+        const obj = typeof fecha.toDate === "function" ? fecha.toDate() : new Date(fecha);
+        return Number.isNaN(obj.getTime())
+          ? ""
+          : obj.toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" });
+      } catch {
+        return "";
+      }
+    }
+
+    // --- Comentarios ---
+    function crearComentarioUI(data) {
+      const autorNombre = String(data.autorNombre || "Estudiante");
+      const hijosContenido = [crearNodo("strong", { className: "comentario-autor", textContent: autorNombre })];
+
+      if (data.texto) {
+        hijosContenido.push(crearNodo("p", { className: "comentario-texto", textContent: data.texto }));
+      }
+      if (data.archivoURL) {
+        hijosContenido.push(crearNodo("img", { className: "comentario-adjunto", src: data.archivoURL }));
+      }
+
+      const fechaStr = formatearFecha(data.fecha);
+      if (fechaStr) {
+        hijosContenido.push(crearNodo("small", { className: "comentario-fecha", textContent: fechaStr }));
+      }
+
+      return crearNodo("article", { className: "comentario" }, [
+        crearNodo("span", { className: "comentario-avatar", textContent: inicial(autorNombre) }),
+        crearNodo("div", { className: "comentario-contenido" }, hijosContenido)
+      ]);
+    }
+
+    function conectarComentariosPublicacion(idPost, botonComentar, listaComentarios) {
+      const consulta = query(collection(db, "publicaciones", idPost, "comentarios"), orderBy("fecha", "asc"));
+      const cancelar = onSnapshot(consulta, snap => {
+        listaComentarios.replaceChildren();
+        if (snap.empty) {
+          listaComentarios.appendChild(crearNodo("p", { className: "sin-comentarios", textContent: "Todavía no hay comentarios." }));
+        } else {
+          snap.forEach(d => listaComentarios.appendChild(crearComentarioUI(d.data())));
+        }
+        botonComentar.textContent = `💬 Comentar (${snap.size})`;
+      });
+      escuchasComentarios.set(idPost, cancelar);
+    }
+
+    function agregarSeccionComentarios(tarjeta, idPost) {
+      const botonComentar = crearNodo("button", { type: "button", textContent: "💬 Comentar (0)" });
+      const acciones = crearNodo("div", { className: "post-acciones" }, [botonComentar]);
+
+      const listaComentarios = crearNodo("div", { className: "lista-comentarios" }, [
+        crearNodo("p", { className: "sin-comentarios", textContent: "Cargando..." })
+      ]);
+
+      const entrada = crearNodo("textarea", { className: "entrada-comentario", placeholder: "Escribe un comentario..." });
+      const inputFoto = crearNodo("input", { type: "file", accept: "image/*", className: "entrada-adjunto-comentario" });
+      const botonFoto = crearNodo("button", { type: "button", className: "adjuntar-comentario", textContent: "📷 Foto" });
+      const botonEnviar = crearNodo("button", { type: "submit", className: "enviar-comentario", textContent: "Enviar" });
+      const preview = crearNodo("div", { className: "preview-adjunto-comentario" });
+
+      botonFoto.onclick = () => inputFoto.click();
+
+      let adjuntoFile = null;
+      let adjuntoUrl = null;
+
+      const limpiarAdjunto = () => {
+        if (adjuntoUrl) URL.revokeObjectURL(adjuntoUrl);
+        adjuntoUrl = null;
+        adjuntoFile = null;
+        preview.replaceChildren();
+        preview.classList.remove("visible");
+        inputFoto.value = "";
+      };
+
+      inputFoto.onchange = () => {
+        const file = inputFoto.files?.[0];
+        if (!file) return;
+        limpiarAdjunto();
+        adjuntoFile = file;
+        adjuntoUrl = URL.createObjectURL(file);
+
+        const quitar = crearNodo("button", { type: "button", className: "quitar-adjunto-comentario", textContent: "×" });
+        quitar.onclick = limpiarAdjunto;
+
+        preview.append(crearNodo("img", { src: adjuntoUrl }), quitar);
+        preview.classList.add("visible");
+      };
+
+      const formulario = crearNodo("form", { className: "form-comentario" }, [
+        entrada, inputFoto, botonFoto, botonEnviar, preview
+      ]);
+      const panel = crearNodo("section", { className: "comentarios-publicacion" }, [listaComentarios, formulario]);
+
+      botonComentar.onclick = () => panel.classList.toggle("visible");
+      tarjeta.append(acciones, panel);
+
+      formulario.onsubmit = async e => {
+        e.preventDefault();
+        const texto = entrada.value.trim();
+        if (!texto && !adjuntoFile) return mostrarMensaje("Escribe o adjunta algo.");
+
+        botonEnviar.disabled = true;
+        botonEnviar.textContent = "Enviando...";
+
+        try {
+          let archivoURL = "";
+          if (adjuntoFile) {
+            const ruta = `comentarios_foro/${idPost}/${Date.now()}_${adjuntoFile.name}`;
+            const subida = await uploadBytesResumable(ref(storage, ruta), adjuntoFile);
+            archivoURL = await getDownloadURL(subida.ref);
+          }
+
+          await addDoc(collection(db, "publicaciones", idPost, "comentarios"), {
+            texto,
+            archivoURL,
+            autorNombre: nombreEstudiante,
+            autorId: idEstudiante,
+            fecha: serverTimestamp()
+          });
+
+          entrada.value = "";
+          limpiarAdjunto();
+        } catch {
+          mostrarMensaje("Error al comentar.", "#a52b3a");
+        } finally {
+          botonEnviar.disabled = false;
+          botonEnviar.textContent = "Enviar";
+        }
+      };
+
+      conectarComentariosPublicacion(idPost, botonComentar, listaComentarios);
+    }
+
+    // --- Encuestas interactivas ---
+    async function votarEncuesta(idPost, indiceOpcion) {
+      if (!idEstudiante || idEstudiante === "usuario-local") {
+        return mostrarMensaje("Inicia sesión con tu matrícula para votar.", "#a52b3a");
+      }
+
+      const refPost = doc(db, "publicaciones", idPost);
+      try {
+        await runTransaction(db, async tx => {
+          const snap = await tx.get(refPost);
+          if (!snap.exists()) return;
+
+          const data = snap.data();
+          const enc = data.encuesta;
+          if (!enc || !Array.isArray(enc.opciones)) return;
+
+          const votosPorUsuario = { ...(enc.votosPorUsuario || {}) };
+          votosPorUsuario[idEstudiante] = indiceOpcion;
+
+          const conteos = enc.opciones.map((_, idx) =>
+            Object.values(votosPorUsuario).filter(v => v === idx).length
+          );
+
+          tx.update(refPost, {
+            "encuesta.votosPorUsuario": votosPorUsuario,
+            "encuesta.conteos": conteos
+          });
+        });
+      } catch (err) {
+        console.error("Error al registrar voto:", err);
+        mostrarMensaje("No se pudo registrar tu voto.", "#a52b3a");
+      }
+    }
+
+    function crearEncuestaUI(idPost, enc) {
+      const votosPorUsuario = enc.votosPorUsuario || {};
+      const votoUsuario = Object.prototype.hasOwnProperty.call(votosPorUsuario, idEstudiante)
+        ? votosPorUsuario[idEstudiante]
+        : null;
+      const conteos = Array.isArray(enc.conteos)
+        ? enc.conteos
+        : enc.opciones.map(() => 0);
+      const totalVotos = conteos.reduce((acc, n) => acc + (Number(n) || 0), 0);
+      const yaVoto = votoUsuario !== null;
+
+      const caja = crearNodo("div", { className: "encuesta-publicada" }, [
+        crearNodo("p", { className: "encuesta-pregunta", textContent: enc.pregunta || "Encuesta" })
+      ]);
+
+      enc.opciones.forEach((op, idx) => {
+        const votosOp = Number(conteos[idx]) || 0;
+        const porcentaje = totalVotos > 0 ? Math.round((votosOp / totalVotos) * 100) : 0;
+
+        const btnOp = crearNodo("button", {
+          type: "button",
+          className: "opcion-encuesta" + (votoUsuario === idx ? " seleccionada" : ""),
+          textContent: op
+        });
+        btnOp.onclick = () => votarEncuesta(idPost, idx);
+
+        const barra = crearNodo("div", { className: "encuesta-barra" });
+        barra.style.width = `${porcentaje}%`;
+
+        const resultado = crearNodo("div", { className: "encuesta-resultado" + (yaVoto ? " visible" : "") }, [
+          crearNodo("div", { className: "encuesta-barra-fondo" }, [barra]),
+          crearNodo("small", { className: "encuesta-dato", textContent: `${porcentaje}% (${votosOp} ${votosOp === 1 ? "voto" : "votos"})` })
+        ]);
+
+        caja.appendChild(crearNodo("div", { className: "encuesta-opcion-contenedor" }, [btnOp, resultado]));
+      });
+
+      if (totalVotos > 0) {
+        caja.appendChild(crearNodo("small", {
+          className: "encuesta-pie",
+          textContent: `Total: ${totalVotos} ${totalVotos === 1 ? "voto" : "votos"}`
+        }));
+      }
+
+      return caja;
+    }
+
+    // --- Publicaciones en el Feed ---
+    function crearPublicacionUI(idPost, data) {
+      const tarjeta = crearNodo("article", { className: "post", id: idPost });
+
+      if (data.autorId === idEstudiante) {
+        const btnEliminar = crearNodo("button", {
+          type: "button",
+          className: "boton-eliminar-publicacion",
+          textContent: "🗑 Eliminar"
+        });
+        btnEliminar.onclick = async () => {
+          if (confirm("¿Eliminar publicación?")) {
+            await deleteDoc(doc(db, "publicaciones", idPost));
+          }
+        };
+        tarjeta.appendChild(btnEliminar);
+      }
+
+      const rolRaw = String(data.autorRol || data.tipoUsuario || data.rol || "").toLowerCase();
+      const rolEtiqueta = (rolRaw.includes("tutor") || rolRaw.includes("docente")) ? "Tutor" : "Estudiante";
+
+      const cabecera = crearNodo("div", { className: "post-cabecera" }, [
+        crearNodo("span", { className: "avatar-mini", textContent: inicial(data.autorNombre) }),
+        crearNodo("div", { className: "cabecera-titulos" }, [
+          crearNodo("span", { textContent: String(data.autorNombre || "Usuario UV") }),
+          crearNodo("small", { textContent: rolEtiqueta })
+        ])
+      ]);
+      tarjeta.appendChild(cabecera);
+
+      if (data.texto) {
+        tarjeta.appendChild(crearNodo("p", { className: "post-texto", textContent: data.texto }));
+      }
+
+      if (data.encuesta && Array.isArray(data.encuesta.opciones)) {
+        tarjeta.appendChild(crearEncuestaUI(idPost, data.encuesta));
+      }
+
+      if (data.archivoURL) {
+        if (data.tipoArchivo === "foto" || data.tipoArchivo === "gif") {
+          tarjeta.appendChild(crearNodo("img", { src: data.archivoURL, alt: "Imagen adjunta" }));
+        } else {
+          tarjeta.appendChild(crearNodo("a", {
+            className: "archivo-publicado",
+            href: data.archivoURL,
+            target: "_blank",
+            rel: "noopener noreferrer",
+            textContent: "📄 Ver archivo"
+          }));
+        }
+      }
+
+      agregarSeccionComentarios(tarjeta, idPost);
+      return tarjeta;
+    }
+
+    let primeraCargaFeed = true;
+    const detenerFeed = onSnapshot(
+      query(collection(db, "publicaciones"), orderBy("fecha", "desc")),
+      snap => {
+        if (primeraCargaFeed) {
+          feed.replaceChildren();
+          snap.docs.forEach(d => feed.appendChild(crearPublicacionUI(d.id, d.data())));
+          primeraCargaFeed = false;
+          return;
+        }
+
+        snap.docChanges().forEach(change => {
+          const { id } = change.doc;
+          if (change.type === "added") {
+            feed.prepend(crearPublicacionUI(id, change.doc.data()));
+          } else if (change.type === "modified") {
+            const actual = document.getElementById(id);
+            if (actual) {
+              escuchasComentarios.get(id)?.();
+              escuchasComentarios.delete(id);
+              actual.replaceWith(crearPublicacionUI(id, change.doc.data()));
+            }
+          } else if (change.type === "removed") {
+            document.getElementById(id)?.remove();
+            escuchasComentarios.get(id)?.();
+            escuchasComentarios.delete(id);
+          }
+        });
+      },
+      err => {
+        console.error("Error al escuchar publicaciones en tiempo real:", err);
+        mostrarMensaje("No se pudieron actualizar las publicaciones. Revisa la conexión con Firebase.", "#a52b3a");
+      }
+    );
+
+    // --- Creación y envío de publicaciones ---
+    $("btnFoto").onclick = () => $("inputFoto").click();
+    $("btnGif").onclick = () => $("inputGif").click();
+    $("btnArchivo").onclick = () => $("inputArchivo").click();
+
+    const limpiarArchivoPublicacion = () => {
+      if (urlPreviewPublicacion) URL.revokeObjectURL(urlPreviewPublicacion);
+      urlPreviewPublicacion = null;
+      archivoPublicacion = null;
+      tipoArchivoPublicacion = "";
+      previewPublicacion.replaceChildren();
+      previewPublicacion.classList.remove("visible");
+      ["inputFoto", "inputGif", "inputArchivo"].forEach(id => $(id).value = "");
+    };
+
+    const elegirArchivo = (file, tipo) => {
+      if (!file) return;
+      limpiarArchivoPublicacion();
+      archivoPublicacion = file;
+      tipoArchivoPublicacion = tipo;
+      urlPreviewPublicacion = URL.createObjectURL(file);
+
+      previewPublicacion.classList.add("visible");
+      if (tipo === "foto" || tipo === "gif") {
+        previewPublicacion.appendChild(crearNodo("img", { src: urlPreviewPublicacion }));
+      } else {
+        previewPublicacion.appendChild(crearNodo("span", { textContent: "📄 " + file.name }));
+      }
+
+      const quitar = crearNodo("button", { type: "button", className: "quitar-archivo", textContent: "×" });
+      quitar.onclick = limpiarArchivoPublicacion;
+      previewPublicacion.appendChild(quitar);
+    };
+
+    $("inputFoto").onchange = e => elegirArchivo(e.target.files?.[0], "foto");
+    $("inputGif").onchange = e => elegirArchivo(e.target.files?.[0], "gif");
+    $("inputArchivo").onchange = e => elegirArchivo(e.target.files?.[0], "archivo");
+
+    // --- Panel de encuesta ---
+    $("btnEncuesta").onclick = () => panelEncuesta.classList.toggle("visible");
+    $("cerrarEncuesta").onclick = () => panelEncuesta.classList.remove("visible");
+
+    $("agregarOpcion").onclick = () => {
+      const ops = document.querySelectorAll(".opcion");
+      if (ops.length >= 6) return mostrarMensaje("Máximo 6 opciones.");
+      $("agregarOpcion").before(crearNodo("input", {
+        className: "opcion",
+        maxLength: 100,
+        placeholder: `Opción ${ops.length + 1}`
+      }));
+    };
+
+    const leerEncuesta = () => {
+      if (!panelEncuesta.classList.contains("visible")) return encuestaBorrador;
+      const pregunta = $("pregunta").value.trim();
+      const opciones = [...document.querySelectorAll(".opcion")].map(i => i.value.trim()).filter(Boolean);
+      if (!pregunta || opciones.length < 2) {
+        mostrarMensaje("Falta pregunta o opciones.");
+        return false;
+      }
+      return { pregunta, opciones };
+    };
+
+    $("publicarEncuesta").onclick = () => {
+      const enc = leerEncuesta();
+      if (!enc) return;
+      encuestaBorrador = enc;
+      panelEncuesta.classList.remove("visible");
+      mostrarMensaje("Encuesta agregada al borrador.");
+    };
+
+    $("btnPublicar").onclick = async () => {
+      const texto = $("textoPublicacion").value.trim();
+      const enc = leerEncuesta();
+      if (enc === false) return;
+      if (!texto && !enc && !archivoPublicacion) {
+        return mostrarMensaje("La publicación no puede estar vacía.");
+      }
+
+      overlayCarga.classList.add("visible");
+      try {
+        let urlArch = null;
+        if (archivoPublicacion) {
+          const refArch = ref(storage, `archivos_foro/${Date.now()}_${archivoPublicacion.name}`);
+          const subida = await uploadBytesResumable(refArch, archivoPublicacion);
+          urlArch = await getDownloadURL(subida.ref);
+        }
+
+        await addDoc(collection(db, "publicaciones"), {
+          texto,
+          encuesta: enc ? {
+            pregunta: enc.pregunta,
+            opciones: enc.opciones,
+            conteos: enc.opciones.map(() => 0),
+            votosPorUsuario: {}
+          } : null,
+          archivoURL: urlArch,
+          tipoArchivo: tipoArchivoPublicacion,
+          autorNombre: nombreEstudiante,
+          autorId: idEstudiante,
+          autorRol: "Estudiante",
+          fecha: serverTimestamp()
+        });
+
+        $("textoPublicacion").value = "";
+        limpiarArchivoPublicacion();
+        encuestaBorrador = null;
+        $("pregunta").value = "";
+        document.querySelectorAll(".opcion").forEach(i => i.value = "");
+
+        mostrarMensaje("Publicado.", "#1b7a3d");
+      } catch (err) {
+        console.error("Error al publicar:", err);
+        mostrarMensaje("Error al publicar.", "#a52b3a");
+      } finally {
+        overlayCarga.classList.remove("visible");
+      }
+    };
+
+    // --- Buscador en tiempo real ---
+    $("buscar").oninput = e => {
+      const t = e.target.value.toLowerCase();
+      document.querySelectorAll(".post").forEach(p => {
+        p.style.display = p.textContent.toLowerCase().includes(t) ? "" : "none";
+      });
+    };
+
+    // --- Navegación lateral y menús ---
+    document.querySelectorAll("[data-seccion]").forEach(btn => {
+      btn.onclick = () => {
+        const sec = btn.dataset.seccion;
+        if (sec === "Inicio") selector.style.top = "16.7%";
+        else mostrarMensaje("Próximamente disponible.");
+      };
+    });
+
+    $("btnFlechaPerfil").onclick = e => {
+      e.stopPropagation();
+      const visible = $("menuPerfil").classList.toggle("visible");
+      $("btnFlechaPerfil").setAttribute("aria-expanded", String(visible));
+      $("panelNotificaciones").classList.remove("visible");
+    };
+
+    $("miPerfil").onclick = () => {
+      window.location.href = "perfil_estudiantes.html";
+    };
+
+    // --- Notificaciones en tiempo real ---
+    const detenerNotificaciones = (() => {
+      const lista = $("listaNotificaciones");
+      const badge = $("badgeNotificaciones");
+      const panel = $("panelNotificaciones");
+
+      if (!idEstudiante || idEstudiante === "usuario-local") {
+        lista.replaceChildren(crearNodo("div", {
+          className: "notificacion-vacia",
+          textContent: "No se pudo identificar la matrícula del estudiante."
+        }));
+        return null;
+      }
+
+      return onSnapshot(
+        query(collection(db, "mensajesTutor"), where("destinatarioId", "==", idEstudiante)),
+        snap => {
+          const pendientes = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .filter(m => m.leido !== true)
+            .sort((a, b) => (b.fecha?.toMillis?.() || 0) - (a.fecha?.toMillis?.() || 0));
+
+          badge.textContent = pendientes.length > 99 ? "99+" : String(pendientes.length);
+          badge.classList.toggle("visible", pendientes.length > 0);
+          lista.replaceChildren();
+
+          if (!pendientes.length) {
+            lista.appendChild(crearNodo("div", { className: "notificacion-vacia", textContent: "No tienes mensajes nuevos." }));
+            return;
+          }
+
+          pendientes.forEach(m => {
+            const boton = crearNodo("button", { type: "button", className: "notificacion-item" }, [
+              crearNodo("strong", { textContent: `${m.emisorNombre || "Tutor"}${m.emisorId ? " · " + m.emisorId : ""}` }),
+              crearNodo("span", { textContent: m.texto || (m.archivoNombre ? "📎 " + m.archivoNombre : "Te enviaron un mensaje.") })
+            ]);
+
+            boton.addEventListener("click", async () => {
+              try {
+                await updateDoc(doc(db, "mensajesTutor", m.id), { leido: true });
+              } catch (err) {
+                console.error("No se pudo marcar la notificación como leída:", err);
+              }
+              sessionStorage.setItem("chatPendienteUV", JSON.stringify({
+                matricula: m.emisorId || "",
+                nombre: m.emisorNombre || "Tutor",
+                rol: m.rolEmisor === "tutor" ? "Tutor" : "Estudiante"
+              }));
+              panel.classList.remove("visible");
+              window.location.href = "chats_estudiantes.html";
+            });
+
+            lista.appendChild(boton);
+          });
+        },
+        err => {
+          console.error("Error al cargar notificaciones:", err);
+          lista.replaceChildren(crearNodo("div", {
+            className: "notificacion-vacia",
+            textContent: "No se pudieron cargar las notificaciones."
+          }));
+        }
+      );
+    })();
+
+    $("btnNotificaciones").onclick = e => {
+      e.stopPropagation();
+      $("panelNotificaciones").classList.toggle("visible");
+      $("menuPerfil").classList.remove("visible");
+      $("btnFlechaPerfil").setAttribute("aria-expanded", "false");
+    };
+
+    // Botón para cerrar la sesión actual, detener escuchas en tiempo real y volver al login
+    $("cerrarSesion").onclick = () => {
+      detenerNotificaciones?.();
+      detenerFeed?.();
+      escuchasComentarios.forEach(fn => fn());
+      sessionStorage.removeItem("usuarioUV");
+      sessionStorage.removeItem("chatPendienteUV");
+      window.location.href = "../codigo principal/login.html";
+    };
+
+    document.addEventListener("click", e => {
+      if (!e.target.closest("#btnFlechaPerfil, #menuPerfil")) {
+        $("menuPerfil").classList.remove("visible");
+        $("btnFlechaPerfil").setAttribute("aria-expanded", "false");
+      }
+      if (!e.target.closest("#btnNotificaciones, #panelNotificaciones")) {
+        $("panelNotificaciones").classList.remove("visible");
+      }
+    });
+
+    window.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        $("menuPerfil").classList.remove("visible");
+        $("panelNotificaciones").classList.remove("visible");
+        panelEncuesta.classList.remove("visible");
+      }
+    });
+  </script>
+</body>
+</html>

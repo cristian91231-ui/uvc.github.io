@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro | Universidad Veracruzana</title>
+  <style>
+    /* Reinicia márgenes, rellenos y box-sizing en todos los elementos */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* Configura la página a pantalla completa sin bordes ni barras de desplazamiento */
+    html, body {
+      width: 100%; height: 100%; overflow: hidden;
+      font-family: Arial, sans-serif; background: #0755b8;
+    }
+
+    /* Clase base para posicionar elementos de forma absoluta sobre la imagen de diseño */
+    .abs { position: absolute; background: transparent; border: none; z-index: 2; }
+
+    /* Cursor de manita y transición suave para todos los botones */
+    .btn { cursor: pointer; transition: background 0.18s, box-shadow 0.18s; }
+    .btn:hover { background: rgba(22, 113, 232, 0.10); box-shadow: 0 0 0 2px rgba(22, 113, 232, 0.35); }
+
+    /* Contenedor a pantalla completa ajustado exactamente a la imagen de fondo (1920x1080) */
+    .pantalla {
+      position: relative; width: 100vw; height: 100vh; min-width: 900px; min-height: 540px;
+      background: url("../imagenes/principales/registrarse.jpg") center / 100% 100% no-repeat;
+    }
+
+    /* El formulario ocupa todo el contenedor para posicionar sus hijos respecto a él */
+    #formRegistro { width: 100%; height: 100%; position: relative; }
+
+    /* Botón sobre la flecha superior izquierda (←) para regresar al login */
+    #volver {
+      left: 72.9%; top: 6.8%; width: 2.4%; height: 3.4%; border-radius: 8px;
+    }
+
+    /* Estilo compartido por los campos de entrada y listas desplegables (ubicados a la derecha del icono de cada caja) */
+    .campo {
+      left: 77.05%; width: 17.30%; padding: 0 12px;
+      border: 1px solid transparent; border-radius: 0 10px 10px 0; color: #18345b;
+      font-size: clamp(11px, 0.92vw, 15px); outline: none;
+    }
+    .campo:focus { border-color: #1671e8; background: rgba(255, 255, 255, 0.65); }
+    .campo::placeholder { color: #7d8da6; opacity: 1; }
+    select.campo { background-color: transparent; }
+    select.campo option { color: #18345b; background: #ffffff; }
+
+    /* Posición vertical y altura exacta de cada campo según las cajas de registrarse.jpg (1920x1080) */
+    #correo     { top: 26.20%; height: 4.35%; }
+    #nombre     { top: 34.44%; height: 4.44%; border-radius: 0 18px 18px 0; }
+    #matricula  { top: 42.96%; height: 4.44%; }
+    #nacimiento { top: 51.39%; height: 4.54%; cursor: pointer; }
+    #campus     { top: 59.81%; height: 4.44%; cursor: pointer; border-radius: 0 18px 18px 0; }
+    #contraseña { top: 68.43%; height: 4.63%; padding-right: 2.8vw; border-radius: 0 18px 18px 0; }
+
+    /* Botón para mostrar u ocultar la contraseña ubicado al extremo derecho del campo */
+    #verClave {
+      top: 68.43%; left: 91.60%; width: 2.75%; height: 4.63%; border-radius: 0 18px 18px 0;
+      color: #17345e; font-size: clamp(12px, 1vw, 16px);
+      display: flex; align-items: center; justify-content: center; z-index: 3;
+    }
+
+    /* Botón azul "Registrarse" alineado exactamente sobre el botón de la imagen */
+    #registrar { left: 74.22%; top: 78.89%; width: 20.21%; height: 4.81%; border-radius: 11px; }
+
+    /* Botón inferior "Iniciar sesión" alineado exactamente sobre el texto de la imagen */
+    #irLogin { left: 80.80%; top: 89.10%; width: 6.00%; height: 2.20%; border-radius: 6px; }
+
+    /* Cuadro flotante para mostrar mensajes de validación o estado */
+    #mensaje {
+      display: none; top: 84.1%; left: 74.22%; width: 20.21%; padding: 5px 8px;
+      border-radius: 6px; background: rgba(255, 255, 255, 0.96); color: #18345b;
+      font-size: clamp(10px, 0.78vw, 12px); text-align: center; font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .12); z-index: 5;
+    }
+
+    /* Ventana emergente (modal) para validar clave privada cuando se registra un tutor */
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65);
+      z-index: 100; justify-content: center; align-items: center; padding: 20px;
+    }
+    .modal-caja {
+      background: white; width: 100%; max-width: 390px; padding: 30px 25px;
+      border-radius: 18px; text-align: center; box-shadow: 0 10px 35px rgba(0,0,0,.3);
+    }
+    .modal-caja h2 { color: #123f91; margin: 10px 0; font-size: 22px; }
+    .modal-caja p { color: #555; font-size: 14px; margin-bottom: 20px; }
+    #claveTutor {
+      width: 100%; padding: 13px; border: 1px solid #cbd5e1; border-radius: 9px;
+      outline: none; font-size: 15px; margin-bottom: 12px;
+    }
+    .botones-modal { display: flex; gap: 10px; }
+    .botones-modal button { flex: 1; padding: 12px; border: none; border-radius: 9px; cursor: pointer; font-weight: bold; }
+    #confirmarTutor { background: #0755b8; color: white; }
+    #cancelarTutor { background: #e5e7eb; color: #333; }
+    #mensajeTutor { font-size: 13px; min-height: 18px; margin-top: 12px; font-weight: bold; }
+
+    /* En pantallas estrechas permite desplazarse sin deformar el diseño */
+    @media (max-width: 900px), (max-height: 540px) {
+      html, body { overflow: auto; }
+    }
+  </style>
+</head>
+<body>
+<main class="pantalla">
+  <form id="formRegistro">
+    <!-- Botón sobre la flecha superior izquierda para regresar -->
+    <a class="abs btn" id="volver" href="login.html" aria-label="Volver al inicio de sesión" title="Volver"></a>
+
+    <!-- Campos de datos del usuario -->
+    <input class="abs campo" id="correo" type="email" placeholder="tu.correo@uv.mx" required>
+    <input class="abs campo" id="nombre" type="text" placeholder="Ingresa tu nombre completo" required>
+    <input class="abs campo" id="matricula" type="text" placeholder="Ej. S12345678" required>
+
+    <!-- Selector de año de nacimiento (se llena dinámicamente con JavaScript) -->
+    <select class="abs campo" id="nacimiento" required>
+      <option value="">Selecciona tu año</option>
+    </select>
+
+    <!-- Selector de campus de la Universidad Veracruzana -->
+    <select class="abs campo" id="campus" required>
+      <option value="">Selecciona tu campus</option>
+      <option value="Xalapa">Xalapa</option>
+      <option value="Veracruz">Veracruz</option>
+      <option value="Orizaba-Córdoba">Orizaba-Córdoba</option>
+      <option value="Poza Rica-Tuxpan">Poza Rica-Tuxpan</option>
+      <option value="Coatzacoalcos-Minatitlán">Coatzacoalcos-Minatitlán</option>
+    </select>
+
+    <!-- Campo de contraseña y botón para mostrarla/ocultarla -->
+    <input class="abs campo" id="contraseña" type="password" placeholder="Crea una contraseña segura" minlength="8" required>
+    <button class="abs btn" id="verClave" type="button" aria-label="Mostrar u ocultar contraseña" title="Mostrar u ocultar contraseña">👁</button>
+
+    <!-- Botones de acción: enviar registro o ir a iniciar sesión -->
+    <button class="abs btn" id="registrar" type="submit" aria-label="Registrarse" title="Registrarse"></button>
+    <button class="abs btn" id="irLogin" type="button" aria-label="Iniciar sesión" title="Iniciar sesión"></button>
+
+    <!-- Contenedor de mensajes de validación -->
+    <div class="abs" id="mensaje"></div>
+  </form>
+</main>
+
+<!-- Modal de autorización para cuentas de Tutor -->
+<div class="modal" id="modalTutor">
+  <div class="modal-caja">
+    <div style="font-size: 40px;">🔐</div>
+    <h2>Autorización de tutor</h2>
+    <p>Introduce la contraseña privada para crear cuenta de tutor.</p>
+    <input type="password" id="claveTutor" placeholder="Contraseña privada">
+    <div class="botones-modal">
+      <button type="button" id="cancelarTutor">Cancelar</button>
+      <button type="button" id="confirmarTutor">Verificar</button>
+    </div>
+    <div id="mensajeTutor"></div>
+  </div>
+</div>
+
+<script type="module">
+  // Importa la base de datos Firestore y la función para agregar documentos
+  import { db } from "../base de datos/firebase.js";
+  import { collection, addDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+
+  // Verifica que exista un tipo de usuario seleccionado en la sesión
+  const tipoUsuario = sessionStorage.getItem("tipoUsuario");
+  if (!tipoUsuario) window.location.replace("tutor-estudiante.html");
+
+  // Referencias a los elementos del formulario y modal
+  const form = document.getElementById("formRegistro");
+  const msj = document.getElementById("mensaje");
+  const nacimiento = document.getElementById("nacimiento");
+  const clave = document.getElementById("contraseña");
+  const modal = document.getElementById("modalTutor");
+  const claveTutor = document.getElementById("claveTutor");
+  const msjTutor = document.getElementById("mensajeTutor");
+  let guardando = false; // Evita envíos duplicados mientras se guarda en Firebase
+
+  // Muestra un aviso en el cuadro de mensajes
+  function ponerMensaje(texto, color) {
+    msj.style.display = "block";
+    msj.textContent = texto;
+    msj.style.color = color;
+  }
+
+  // Genera automáticamente las opciones de año de nacimiento (desde hace 15 hasta hace 100 años)
+  const anioActual = new Date().getFullYear();
+  for (let i = anioActual - 15; i >= anioActual - 100; i--) {
+    nacimiento.add(new Option(i, i));
+  }
+
+  // Alterna la visibilidad de la contraseña entre texto oculto y texto plano
+  document.getElementById("verClave").onclick = function() {
+    const oculta = clave.type === "password";
+    clave.type = oculta ? "text" : "password";
+    this.style.opacity = oculta ? "0.65" : "1";
+  };
+
+  // Función asíncrona que guarda el nuevo usuario en la colección "usuarios" de Firestore
+  async function guardarUsuario() {
+    if (guardando) return;
+    guardando = true;
+    ponerMensaje("Guardando...", "#0645ad");
+    try {
+      await addDoc(collection(db, "usuarios"), {
+        correo: document.getElementById("correo").value.trim(),
+        nombre: document.getElementById("nombre").value.trim(),
+        matricula: document.getElementById("matricula").value.trim(),
+        nacimiento: nacimiento.value,
+        campus: document.getElementById("campus").value,
+        contraseña: clave.value,
+        rol: tipoUsuario
+      });
+      modal.style.display = "none";
+      ponerMensaje("¡Listo! Redirigiendo al login...", "green");
+      form.reset();
+      // Redirige a la pantalla de login tras 1.5 segundos
+      setTimeout(() => window.location.replace("login.html"), 1500);
+    } catch (error) {
+      console.log(error);
+      ponerMensaje("Error al guardar.", "red");
+      modal.style.display = "none";
+    } finally {
+      guardando = false;
+    }
+  }
+
+  // Verifica la clave privada del tutor antes de permitir el registro como tutor
+  document.getElementById("confirmarTutor").onclick = function() {
+    if (claveTutor.value === "123") {
+      msjTutor.style.color = "green";
+      msjTutor.textContent = "¡Correcto!";
+      setTimeout(() => {
+        modal.style.display = "none";
+        guardarUsuario();
+      }, 500);
+    } else {
+      msjTutor.style.color = "red";
+      msjTutor.textContent = "Contraseña incorrecta.";
+      claveTutor.value = "";
+    }
+  };
+
+  // Cierra el modal de tutor al cancelar
+  document.getElementById("cancelarTutor").onclick = function() {
+    modal.style.display = "none";
+    claveTutor.value = "";
+    msjTutor.textContent = "";
+  };
+
+  // Permite presionar Enter dentro del campo de clave del tutor
+  claveTutor.onkeydown = function(e) {
+    if (e.key === "Enter") document.getElementById("confirmarTutor").click();
+  };
+
+  // Valida que la contraseña cumpla los requisitos de seguridad antes de registrar
+  form.onsubmit = function(e) {
+    e.preventDefault();
+    const pass = clave.value;
+    // Verifica mínimo 8 caracteres, al menos una letra, un número y un símbolo especial
+    const valida = pass.length >= 8 && /[A-Za-z]/.test(pass) && /\d/.test(pass) && /[^A-Za-z0-9]/.test(pass);
+    if (!valida) {
+      return ponerMensaje("Usa mínimo 8 caracteres, letras, números y un símbolo.", "#18345b");
+    }
+    // Si es estudiante guarda directo; si es tutor abre primero el modal de autorización
+    if (tipoUsuario === "estudiante") {
+      guardarUsuario();
+    } else {
+      modal.style.display = "flex";
+      claveTutor.value = "";
+      msjTutor.textContent = "";
+      claveTutor.focus();
+    }
+  };
+
+  // Botón para ir a la página de iniciar sesión si ya tiene cuenta
+  document.getElementById("irLogin").onclick = function() {
+    window.location.href = "login.html";
+  };
+</script>
+</body>
+</html>

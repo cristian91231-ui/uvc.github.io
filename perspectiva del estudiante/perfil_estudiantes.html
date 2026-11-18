@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil del Estudiante | UV</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; font-family: Arial, sans-serif; overflow: hidden; background: #edf5ff; color: #102b59; }
+  .pantalla { position: relative; width: 100vw; height: 100vh; min-width: 900px; min-height: 560px; }
+
+  .fondo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: fill; pointer-events: none; z-index: 0; }
+  .zona { position: absolute; z-index: 20; border: 0; background: transparent; cursor: pointer; border-radius: 8px; }
+  .zona:hover { background: rgba(20, 120, 230, .08); }
+
+  /* Botones del menú lateral izquierdo alineados con los 6 iconos del diseño */
+  .nav-inicio     { left: .4%; top: 15.7%; width: 10.0%; height: 4.5%; }
+  .nav-avisos     { left: .4%; top: 21.1%; width: 10.0%; height: 4.5%; }
+  .nav-calendario { left: .4%; top: 26.4%; width: 10.0%; height: 4.5%; }
+  .nav-chats      { left: .4%; top: 31.4%; width: 10.0%; height: 4.5%; }
+  .nav-perfil     { left: .4%; top: 37.0%; width: 10.0%; height: 4.5%; }
+  .nav-config     { left: .4%; top: 41.7%; width: 10.0%; height: 4.5%; }
+
+  /* Botones de notificaciones y menú en la esquina superior derecha */
+  #btnNotificaciones { left: 82.2%; top: 1%; width: 3.5%; height: 6%; }
+  #btnMenuPerfil     { left: 86.5%; top: 1%; width: 7.5%; height: 6%; }
+
+  /* Contador rojo de notificaciones pendientes */
+  .badge {
+    position: absolute; z-index: 30; left: 84.3%; top: .8%; min-width: 18px; height: 18px;
+    padding: 0 5px; border-radius: 20px; display: none; align-items: center; justify-content: center;
+    background: #e53935; color: #fff; font-size: 10px; font-weight: bold; pointer-events: none;
+  }
+  .badge.visible { display: flex; }
+
+  /* Panel desplegable de notificaciones */
+  .panel-notif {
+    display: none; position: absolute; z-index: 35; right: 11%; top: 7%; width: min(350px, 34vw);
+    max-height: 55vh; overflow-y: auto; border: 1px solid #dce8f6; border-radius: 12px;
+    background: #fff; box-shadow: 0 8px 25px #0002; color: #173a63;
+  }
+  .panel-notif.visible { display: block; }
+  .panel-notif h3 { padding: 13px 15px; border-bottom: 1px solid #e7eef6; font-size: 14px; }
+  .notif-item {
+    display: block; width: 100%; padding: 12px 14px; border: 0; border-bottom: 1px solid #edf2f8;
+    background: #fff; color: #173a63; text-align: left; cursor: pointer;
+  }
+  .notif-item:hover { background: #f0f7ff; }
+  .notif-item strong { display: block; margin-bottom: 4px; font-size: 12px; }
+  .notif-item span { display: block; color: #7188a1; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .notif-vacia { padding: 18px; color: #7188a1; text-align: center; font-size: 12px; }
+
+  /* Foto de perfil circular y botón de cámara superpuesto sobre el icono azul */
+  #btnFotoPerfil { left: 26.8%; top: 33.8%; width: 3.0%; height: 5.2%; border-radius: 50%; z-index: 22; }
+  #fotoPerfil {
+    position: absolute; z-index: 12; left: 19.8%; top: 21.8%;
+    width: 9.3%; height: 16.6%; border-radius: 50%; object-fit: cover; display: none; pointer-events: none;
+  }
+  #fotoPerfil.visible { display: block; }
+
+  /* Nombre del estudiante, botón de lápiz para editarlo y descripción */
+  #nombreWrap {
+    position: absolute; z-index: 13; left: 13.2%; top: 43.0%;
+    width: 22.5%; min-height: 5%; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 2px 5px;
+  }
+  #nombreTexto { color: #102b59; text-align: center; font-size: clamp(15px, 1.35vw, 23px); font-weight: bold; }
+  #btnEditarNombre {
+    width: 27px; height: 27px; border: 0; border-radius: 50%; background: transparent;
+    color: #123f91; font-size: 20px; cursor: pointer;
+  }
+  #btnEditarNombre:hover { background: rgba(20, 120, 230, .1); }
+
+  #descripcionTexto {
+    position: absolute; z-index: 12; left: 14.0%; top: 56.5%; width: 21.0%; height: 18.0%;
+    overflow: auto; display: flex; align-items: center; justify-content: center; padding: 8px 12px;
+    color: #294767; text-align: center; font-size: clamp(11px, .9vw, 15px); line-height: 1.45; white-space: pre-wrap;
+  }
+
+  /* Botón transparente alineado exactamente sobre "Editar descripción" */
+  #btnEditarDesc {
+    position: absolute; z-index: 22; left: 15.1%; top: 78.3%; width: 19.1%; height: 6.0%;
+    border: 0; background: transparent; border-radius: 30px; cursor: pointer;
+  }
+  #btnEditarDesc:hover { background: rgba(20, 120, 230, .08); }
+
+  /* Tarjeta superior derecha para crear publicación y sus botones (Imagen, Video, Archivo, Publicar) */
+  #formPost { position: absolute; z-index: 12; left: 38.4%; top: 18.5%; width: 58.0%; height: 22.3%; }
+  #textoPost {
+    position: absolute; left: 12.6%; top: 12%; width: 84.5%; height: 40%; resize: none; padding: 10px 14px;
+    border: 0; outline: 0; border-radius: 16px; background: transparent; color: #17345e; font: clamp(12px, 1vw, 17px) Arial, sans-serif;
+  }
+  #textoPost:focus { background: rgba(255, 255, 255, .35); }
+
+  #btnImagen   { position: absolute; left: 2.6%;  top: 61%; width: 15.5%; height: 27%; border: 0; background: transparent; border-radius: 12px; cursor: pointer; }
+  #btnVideo    { position: absolute; left: 20.2%; top: 61%; width: 14.3%; height: 27%; border: 0; background: transparent; border-radius: 12px; cursor: pointer; }
+  #btnArchivo  { position: absolute; left: 36.4%; top: 61%; width: 15.7%; height: 27%; border: 0; background: transparent; border-radius: 12px; cursor: pointer; }
+  #btnPublicar { position: absolute; right: 2.6%; top: 60.5%; width: 19.8%; height: 28%; border: 0; background: transparent; border-radius: 30px; cursor: pointer; }
+  #btnImagen:hover, #btnVideo:hover, #btnArchivo:hover, #btnPublicar:hover { background: rgba(20, 120, 230, .09); }
+
+  /* Etiqueta de vista previa del archivo adjunto antes de publicar */
+  .preview-adjunto {
+    position: absolute; z-index: 25; left: 38.4%; top: 40.8%; max-width: 50%;
+    display: none; align-items: center; gap: 8px; padding: 5px 10px; border-radius: 8px;
+    background: #fff; border: 1px solid #cfe0f5; color: #173a63; font-size: 12px;
+  }
+  .preview-adjunto.visible { display: flex; }
+  .preview-adjunto button { border: 0; background: transparent; color: #c62828; font-size: 16px; font-weight: bold; cursor: pointer; }
+
+  /* Contenedor inferior derecho donde se listan las publicaciones del estudiante */
+  #listaPosts {
+    position: absolute; z-index: 12; left: 38.4%; top: 43.5%; width: 58.0%; height: 47.0%;
+    overflow-y: auto; padding: 8px 12px;
+  }
+  .vacio { height: 100%; min-height: 180px; display: flex; align-items: center; justify-content: center; color: #7489a8; font-size: 14px; }
+  .post {
+    position: relative; margin-bottom: 12px; padding: 16px; border: 1px solid #dce8f6; border-radius: 14px;
+    background: rgba(255, 255, 255, .96); color: #173a63; overflow-wrap: anywhere;
+  }
+  .post-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .avatar { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: #9db4d0; color: #fff; font-weight: bold; }
+  .post-info { display: flex; flex-direction: column; font-size: 13px; font-weight: bold; }
+  .post-info small { font-size: 11px; font-weight: normal; color: #7188a1; }
+  .post-texto { margin-top: 8px; color: #294767; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+  .post-fecha { display: block; margin-top: 9px; color: #8292a6; font-size: 10px; }
+  .btn-borrar {
+    position: absolute; right: 12px; top: 12px; border: 1px solid #ffd5d9; border-radius: 7px;
+    background: #fff5f5; color: #c62828; padding: 6px 9px; font-size: 11px; cursor: pointer;
+  }
+  .btn-borrar:hover { background: #c62828; color: #fff; }
+
+  /* Encuestas */
+  .encuesta { margin-top: 12px; padding: 12px; border: 1px solid #dce8f4; border-radius: 10px; background: #f8fbff; }
+  .encuesta p { margin-bottom: 8px; font-weight: bold; font-size: 13px; }
+  .opcion-btn {
+    width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #cfe0f0; border-radius: 8px;
+    background: #fff; color: #173a63; text-align: left; font-size: 12px; cursor: pointer;
+  }
+  .opcion-btn.elegida { border-color: #0877ee; font-weight: bold; background: #f0f7ff; }
+  .barra-bg { height: 6px; margin-top: 4px; border-radius: 8px; background: #e2edf7; overflow: hidden; }
+  .barra-fill { height: 100%; background: #0877ee; }
+  .voto-dato { display: block; margin-top: 3px; color: #7188a1; font-size: 11px; }
+
+  /* Menú y Modales */
+  .menu-perfil {
+    position: absolute; z-index: 40; right: 2%; top: 7%; width: 210px; display: none; padding: 13px;
+    border: 1px solid #dce8f6; border-radius: 12px; background: #fff; box-shadow: 0 8px 25px #0002; font-size: 12px;
+  }
+  .menu-perfil.visible { display: block; }
+  .menu-perfil strong { display: block; margin-bottom: 6px; }
+  .menu-perfil button { width: 100%; padding: 9px; border: 0; border-radius: 7px; background: #f2f6fc; text-align: left; cursor: pointer; }
+
+  .modal {
+    position: fixed; inset: 0; z-index: 100; display: none; align-items: center; justify-content: center;
+    padding: 16px; background: rgba(0, 15, 40, .55);
+  }
+  .modal.visible { display: flex; }
+  .modal-caja { width: min(100%, 480px); padding: 24px; border-radius: 16px; background: #fff; }
+  .modal-caja h2 { margin-bottom: 8px; color: #123f91; font-size: 20px; }
+  .modal-caja p { margin-bottom: 15px; color: #64748b; font-size: 13px; }
+  .modal-caja textarea, .modal-caja input {
+    width: 100%; padding: 11px 12px; border: 1px solid #d5e1ee; border-radius: 9px; outline: 0; font: 14px Arial, sans-serif;
+  }
+  .modal-caja textarea { min-height: 130px; resize: vertical; }
+  .modal-btns { display: flex; gap: 9px; margin-top: 16px; }
+  .modal-btns button { flex: 1; min-height: 40px; border: 0; border-radius: 8px; font-weight: bold; cursor: pointer; }
+  .btn-ok { background: #0877ee; color: #fff; }
+  .btn-no { background: #e8edf3; color: #334155; }
+
+  .mensaje {
+    position: fixed; z-index: 150; left: 50%; bottom: 18px; transform: translateX(-50%);
+    display: none; padding: 12px 17px; border-radius: 9px; background: #073967; color: #fff; font-size: 13px;
+  }
+  .mensaje.visible { display: block; }
+  .cargando {
+    position: fixed; inset: 0; z-index: 120; display: none; align-items: center; justify-content: center;
+    background: rgba(255, 255, 255, .7); color: #0755b8; font-weight: bold;
+  }
+  .cargando.visible { display: flex; }
+  .oculto { display: none !important; }
+
+  @media (max-width: 700px) {
+    html, body { overflow: auto; }
+    .pantalla { min-width: 900px; min-height: 700px; }
+  }
+</style>
+</head>
+
+<body>
+<main class="pantalla">
+  <img class="fondo" id="fondoImg" alt="">
+
+  <!-- Navegación -->
+  <a class="zona nav-inicio"     href="pantalla_principal.html"></a>
+  <a class="zona nav-avisos"     href="avisos_estudiantes.html"></a>
+  <a class="zona nav-calendario" href="calendario_estudiante.html"></a>
+  <a class="zona nav-chats"      href="chats_estudiantes.html"></a>
+  <a class="zona nav-perfil"     href="perfil_estudiantes.html"></a>
+  <a class="zona nav-config"     href="configuracion_estudiante.html"></a>
+
+  <button class="zona" id="btnNotificaciones" type="button"></button>
+  <span class="badge" id="badgeNotif"></span>
+
+  <div class="panel-notif" id="panelNotif">
+    <h3>Notificaciones</h3>
+    <div id="listaNotif"><div class="notif-vacia">Cargando...</div></div>
+  </div>
+
+  <button class="zona" id="btnMenuPerfil" type="button"></button>
+
+  <!-- Foto y datos -->
+  <img id="fotoPerfil" alt="Foto">
+  <button class="zona" id="btnFotoPerfil" type="button"></button>
+  <input id="inputFoto" type="file" accept="image/*" class="oculto">
+
+  <div id="nombreWrap">
+    <h2 id="nombreTexto">Cargando...</h2>
+    <button id="btnEditarNombre" type="button">✎</button>
+  </div>
+
+  <div id="descripcionTexto">Aún no has agregado una descripción.</div>
+  <button id="btnEditarDesc" type="button"></button>
+
+  <!-- Publicar -->
+  <form id="formPost">
+    <textarea id="textoPost" maxlength="1500" placeholder="¿Qué quieres compartir con la comunidad UV?"></textarea>
+    <button id="btnImagen"   type="button"></button>
+    <button id="btnVideo"    type="button"></button>
+    <button id="btnArchivo"  type="button"></button>
+    <button id="btnPublicar" type="submit"></button>
+    <input class="oculto" id="inImg"  type="file" accept="image/*">
+    <input class="oculto" id="inVid"  type="file" accept="video/*">
+    <input class="oculto" id="inArch" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar">
+  </form>
+
+  <div class="preview-adjunto" id="previewAdjunto">
+    <span id="nombreAdjunto"></span>
+    <button type="button" id="quitarAdjunto">×</button>
+  </div>
+
+  <section id="listaPosts">
+    <div class="vacio">Tus publicaciones aparecerán aquí.</div>
+  </section>
+
+  <!-- Menú perfil -->
+  <div class="menu-perfil" id="menuPerfil">
+    <strong id="nombreMenu">Estudiante</strong>
+    <button id="cerrarSesion" type="button">Cerrar sesión</button>
+  </div>
+
+  <!-- Modal Nombre -->
+  <div class="modal" id="modalNombre">
+    <div class="modal-caja">
+      <h2>Actualiza tu nombre</h2>
+      <p>Este nombre se verá en tu perfil y publicaciones.</p>
+      <input id="inputNombre" type="text" maxlength="100" placeholder="Escribe tu nombre...">
+      <div class="modal-btns">
+        <button class="btn-no" id="cancelarNombre" type="button">Cancelar</button>
+        <button class="btn-ok" id="guardarNombre" type="button">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Descripción -->
+  <div class="modal" id="modalDesc">
+    <div class="modal-caja">
+      <h2>Sobre ti</h2>
+      <p>Cuéntale a la comunidad qué estudias o qué te interesa.</p>
+      <textarea id="inputDesc" maxlength="500" placeholder="Hola, soy estudiante de..."></textarea>
+      <div class="modal-btns">
+        <button class="btn-no" id="cancelarDesc" type="button">Cancelar</button>
+        <button class="btn-ok" id="guardarDesc" type="button">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mensaje" id="mensaje"></div>
+  <div class="cargando" id="cargando">Guardando...</div>
+</main>
+
+<script>
+  // Cargar fondo con respaldo de rutas
+  const fondo = document.getElementById("fondoImg");
+  const rutasFondo = [
+    "../imagenes/estudiantes/perfil_estudiante.png",
+    "../imagenes/estudiantes/perfil_estudiante.png",
+    "imagenes/estudiantes/perfil_estudiante.png"
+  ];
+  let idxFondo = 0;
+  fondo.onerror = () => {
+    if (idxFondo < rutasFondo.length) fondo.src = rutasFondo[idxFondo++];
+  };
+  fondo.src = rutasFondo[idxFondo++];
+</script>
+
+<script type="module">
+import { db, storage } from "../base%20de%20datos/firebase.js";
+import {
+  collection, query, where, getDocs, updateDoc, addDoc,
+  onSnapshot, deleteDoc, doc, serverTimestamp, runTransaction
+} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import {
+  ref, uploadBytesResumable, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
+
+const $ = id => document.getElementById(id);
+
+// Revisar sesión activa del estudiante
+const usuario = JSON.parse(sessionStorage.getItem("usuarioUV") || "null");
+if (!usuario) location.replace("../codigo principal/login.html");
+
+const matricula = String(usuario.matricula || "").trim();
+const correo = String(usuario.correo || usuario.email || "").trim();
+const idUsuario = matricula || correo;
+if (!idUsuario) location.replace("../codigo principal/login.html");
+
+let nombreActual = usuario.nombrePerfil || usuario.nombre || correo || "Estudiante";
+let descActual = usuario.descripcion || "";
+let refUsuario = null;
+let archivoSel = null;
+let tipoSel = "";
+let stopPosts = null, stopUser = null, stopNotif = null, timerMsj = null;
+
+// Mostrar avisos abajo
+function avisar(texto, error = false) {
+  const m = $("mensaje");
+  m.textContent = texto;
+  m.style.background = error ? "#a52b3a" : "#073967";
+  m.classList.add("visible");
+  clearTimeout(timerMsj);
+  timerMsj = setTimeout(() => m.classList.remove("visible"), 3000);
+}
+
+// Pintar datos en pantalla
+function pintarPerfil(datos) {
+  nombreActual = datos.nombrePerfil || datos.nombre || correo || "Estudiante";
+  descActual = datos.descripcion || "";
+  $("nombreTexto").textContent = nombreActual;
+  $("nombreMenu").textContent = nombreActual;
+  $("descripcionTexto").textContent = descActual || "Aún no has agregado una descripción.";
+
+  const urlFoto = datos.fotoPerfilURL || datos.fotoPerfil || datos.fotoURL || "";
+  const img = $("fotoPerfil");
+  if (urlFoto) {
+    img.src = urlFoto;
+    img.classList.add("visible");
+  } else {
+    img.classList.remove("visible");
+  }
+}
+
+pintarPerfil(usuario);
+
+// Buscar documento del alumno en Firebase
+async function conectarUsuario() {
+  try {
+    const col = collection(db, "usuarios");
+    let snap = matricula ? await getDocs(query(col, where("matricula", "==", matricula))) : null;
+    if ((!snap || snap.empty) && correo) snap = await getDocs(query(col, where("correo", "==", correo)));
+
+    if (!snap || snap.empty) return avisar("No se encontró tu usuario en Firebase.", true);
+
+    refUsuario = snap.docs[0].ref;
+    if (stopUser) stopUser();
+
+    stopUser = onSnapshot(refUsuario, docSnap => {
+      if (!docSnap.exists()) return;
+      const nuevos = docSnap.data();
+      Object.assign(usuario, nuevos, { tipoUsuario: "estudiante" });
+      sessionStorage.setItem("usuarioUV", JSON.stringify(usuario));
+      pintarPerfil(nuevos);
+    });
+  } catch (e) {
+    console.log(e);
+    avisar("Error al conectar con tu perfil.", true);
+  }
+}
+
+const listoUsuario = conectarUsuario();
+
+// Cambiar foto
+$("btnFotoPerfil").onclick = () => $("inputFoto").click();
+$("inputFoto").onchange = async () => {
+  const file = $("inputFoto").files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) return avisar("Elige una imagen válida.", true);
+  if (file.size > 5 * 1024 * 1024) return avisar("Máximo 5 MB.", true);
+
+  $("cargando").classList.add("visible");
+  try {
+    await listoUsuario;
+    const ruta = `fotos_perfil_estudiantes/${idUsuario}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const sub = await uploadBytesResumable(ref(storage, ruta), file);
+    const url = await getDownloadURL(sub.ref);
+
+    await updateDoc(refUsuario, { fotoPerfilURL: url, fotoPerfilPath: ruta, updatedAt: serverTimestamp() });
+    avisar("¡Foto actualizada!");
+  } catch (e) {
+    console.log(e);
+    avisar("No se pudo subir la foto.", true);
+  } finally {
+    $("cargando").classList.remove("visible");
+    $("inputFoto").value = "";
+  }
+};
+
+// Modales nombre y descripción
+$("btnEditarNombre").onclick = () => {
+  $("inputNombre").value = nombreActual === "Estudiante" ? "" : nombreActual;
+  $("modalNombre").classList.add("visible");
+};
+$("cancelarNombre").onclick = () => $("modalNombre").classList.remove("visible");
+
+$("guardarNombre").onclick = async () => {
+  const nuevo = $("inputNombre").value.trim();
+  if (!nuevo) return avisar("Escribe un nombre.", true);
+
+  $("guardarNombre").disabled = true;
+  try {
+    await listoUsuario;
+    await updateDoc(refUsuario, {
+      nombre: nuevo, nombrePerfil: nuevo, nombreCompleto: nuevo, nombres: nuevo, updatedAt: serverTimestamp()
+    });
+    $("modalNombre").classList.remove("visible");
+    avisar("¡Nombre guardado!");
+  } catch (e) {
+    avisar("Error al guardar nombre.", true);
+  } finally {
+    $("guardarNombre").disabled = false;
+  }
+};
+
+$("btnEditarDesc").onclick = () => {
+  $("inputDesc").value = descActual;
+  $("modalDesc").classList.add("visible");
+};
+$("cancelarDesc").onclick = () => $("modalDesc").classList.remove("visible");
+
+$("guardarDesc").onclick = async () => {
+  const nueva = $("inputDesc").value.trim();
+  $("guardarDesc").disabled = true;
+  try {
+    await listoUsuario;
+    await updateDoc(refUsuario, { descripcion: nueva, updatedAt: serverTimestamp() });
+    $("modalDesc").classList.remove("visible");
+    avisar("¡Descripción guardada!");
+  } catch (e) {
+    avisar("Error al guardar descripción.", true);
+  } finally {
+    $("guardarDesc").disabled = false;
+  }
+};
+
+// Adjuntar archivos al post
+function limpiarAdjunto() {
+  archivoSel = null;
+  tipoSel = "";
+  ["inImg", "inVid", "inArch"].forEach(id => $(id).value = "");
+  $("previewAdjunto").classList.remove("visible");
+}
+$("quitarAdjunto").onclick = limpiarAdjunto;
+
+function ligarInput(id, tipo) {
+  $(id).onchange = () => {
+    const f = $(id).files?.[0];
+    if (!f) return;
+    if (f.size > 50 * 1024 * 1024) {
+      limpiarAdjunto();
+      return avisar("El archivo pasa de 50 MB.", true);
+    }
+    archivoSel = f;
+    tipoSel = tipo;
+    $("nombreAdjunto").textContent = "📎 " + f.name;
+    $("previewAdjunto").classList.add("visible");
+  };
+}
+$("btnImagen").onclick = () => $("inImg").click();
+$("btnVideo").onclick = () => $("inVid").click();
+$("btnArchivo").onclick = () => $("inArch").click();
+ligarInput("inImg", "foto");
+ligarInput("inVid", "video");
+ligarInput("inArch", "archivo");
+
+// Publicar
+$("formPost").onsubmit = async e => {
+  e.preventDefault();
+  const texto = $("textoPost").value.trim();
+  if (!texto && !archivoSel) return avisar("Escribe algo o sube un archivo.", true);
+
+  $("cargando").classList.add("visible");
+  try {
+    await listoUsuario;
+    let extra = { archivoURL: null, archivoNombre: "", archivoMime: "", tipoArchivo: "" };
+
+    if (archivoSel) {
+      const ruta = `archivos_foro/${Date.now()}_${archivoSel.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+      const sub = await uploadBytesResumable(ref(storage, ruta), archivoSel);
+      extra = {
+        archivoURL: await getDownloadURL(sub.ref),
+        archivoNombre: archivoSel.name,
+        archivoMime: archivoSel.type || "application/octet-stream",
+        tipoArchivo: tipoSel
+      };
+    }
+
+    await addDoc(collection(db, "publicaciones"), {
+      texto, encuesta: null, ...extra,
+      autorNombre: nombreActual, autorId: idUsuario,
+      autorMatricula: matricula, autorCorreo: correo, autorRol: "Estudiante",
+      fecha: serverTimestamp()
+    });
+
+    $("textoPost").value = "";
+    limpiarAdjunto();
+    avisar("¡Publicado!");
+  } catch (err) {
+    console.log(err);
+    avisar("Error al publicar.", true);
+  } finally {
+    $("cargando").classList.remove("visible");
+  }
+};
+
+// Votar encuestas
+async function votar(idPost, idx) {
+  try {
+    await runTransaction(db, async tx => {
+      const postRef = doc(db, "publicaciones", idPost);
+      const snap = await tx.get(postRef);
+      if (!snap.exists()) return;
+      const enc = snap.data().encuesta;
+      const votos = { ...(enc.votosPorUsuario || {}), [idUsuario]: idx };
+      const conteos = enc.opciones.map((_, i) => Object.values(votos).filter(v => v === i).length);
+      tx.update(postRef, { "encuesta.votosPorUsuario": votos, "encuesta.conteos": conteos });
+    });
+  } catch (e) {
+    avisar("No se pudo votar.", true);
+  }
+}
+
+// Pintar publicaciones del alumno
+function verPosts() {
+  const q = query(collection(db, "publicaciones"), where("autorId", "==", idUsuario));
+  stopPosts = onSnapshot(q, snap => {
+    const lista = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => (b.fecha?.toMillis?.() || 0) - (a.fecha?.toMillis?.() || 0));
+
+    const caja = $("listaPosts");
+    caja.replaceChildren();
+
+    if (!lista.length) {
+      caja.innerHTML = `<div class="vacio">Todavía no tienes publicaciones.</div>`;
+      return;
+    }
+
+    lista.forEach(p => {
+      const art = document.createElement("article");
+      art.className = "post";
+
+      const fecha = p.fecha?.toDate ? p.fecha.toDate().toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" }) : "Reciente";
+      art.innerHTML = `
+        <div class="post-top">
+          <span class="avatar">${(p.autorNombre || "E")[0].toUpperCase()}</span>
+          <div class="post-info"><span>${p.autorNombre || nombreActual}</span><small>Estudiante</small></div>
+        </div>
+        <button class="btn-borrar" type="button">Eliminar</button>
+      `;
+
+      art.querySelector(".btn-borrar").onclick = async () => {
+        if (!confirm("¿Borrar publicación?")) return;
+        await deleteDoc(doc(db, "publicaciones", p.id));
+        avisar("Publicación borrada.");
+      };
+
+      if (p.texto) {
+        const txt = document.createElement("p");
+        txt.className = "post-texto";
+        txt.textContent = p.texto;
+        art.append(txt);
+      }
+
+      if (p.archivoURL) {
+        const t = (p.tipoArchivo || "").toLowerCase();
+        if (t === "foto" || t === "imagen" || t === "gif") {
+          const img = document.createElement("img");
+          img.src = p.archivoURL;
+          img.style.cssText = "display:block;max-width:100%;max-height:360px;margin-top:10px;border-radius:10px;";
+          art.append(img);
+        } else if (t === "video") {
+          const vid = document.createElement("video");
+          vid.src = p.archivoURL;
+          vid.controls = true;
+          vid.style.cssText = "display:block;width:100%;max-height:360px;margin-top:10px;border-radius:10px;background:#000;";
+          art.append(vid);
+        } else {
+          const a = document.createElement("a");
+          a.href = p.archivoURL;
+          a.target = "_blank";
+          a.className = "post-texto";
+          a.textContent = "📎 " + (p.archivoNombre || "Ver archivo");
+          a.style.display = "block";
+          art.append(a);
+        }
+      }
+
+      if (p.encuesta?.pregunta) {
+        const enc = p.encuesta;
+        const votos = enc.votosPorUsuario || {};
+        const conteos = enc.conteos || enc.opciones.map(() => 0);
+        const total = conteos.reduce((a, b) => a + b, 0);
+
+        const divEnc = document.createElement("div");
+        divEnc.className = "encuesta";
+        divEnc.innerHTML = `<p>Encuesta: ${enc.pregunta}</p>`;
+
+        enc.opciones.forEach((op, i) => {
+          const pct = total ? Math.round((conteos[i] / total) * 100) : 0;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "opcion-btn" + (votos[idUsuario] === i ? " elegida" : "");
+          btn.textContent = op;
+          btn.onclick = () => votar(p.id, i);
+
+          const info = document.createElement("div");
+          info.innerHTML = `
+            <div class="barra-bg"><div class="barra-fill" style="width:${pct}%"></div></div>
+            <small class="voto-dato">${pct}% (${conteos[i]} votos)</small>
+          `;
+          divEnc.append(btn, info);
+        });
+        art.append(divEnc);
+      }
+
+      const f = document.createElement("small");
+      f.className = "post-fecha";
+      f.textContent = fecha;
+      art.append(f);
+      caja.append(art);
+    });
+  });
+}
+
+// Notificaciones
+function verNotificaciones() {
+  const q = query(collection(db, "mensajesTutor"), where("destinatarioId", "==", idUsuario));
+  stopNotif = onSnapshot(q, snap => {
+    const sinLeer = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(m => !m.leido);
+    const badge = $("badgeNotif");
+    const lista = $("listaNotif");
+
+    badge.textContent = sinLeer.length;
+    badge.classList.toggle("visible", sinLeer.length > 0);
+    lista.replaceChildren();
+
+    if (!sinLeer.length) {
+      lista.innerHTML = `<div class="notif-vacia">Sin mensajes nuevos.</div>`;
+      return;
+    }
+
+    sinLeer.forEach(m => {
+      const btn = document.createElement("button");
+      btn.className = "notif-item";
+      btn.innerHTML = `<strong>${m.emisorNombre || "Tutor"}</strong><span>${m.texto || "Archivo adjunto"}</span>`;
+      btn.onclick = async () => {
+        await updateDoc(doc(db, "mensajesTutor", m.id), { leido: true });
+        sessionStorage.setItem("chatPendienteUV", JSON.stringify({
+          matricula: m.emisorId || "", nombre: m.emisorNombre || "Tutor", rol: m.rolEmisor === "tutor" ? "Tutor" : "Estudiante"
+        }));
+        location.href = "chats_estudiantes.html";
+      };
+      lista.append(btn);
+    });
+  });
+}
+
+// Menús y cierres
+$("btnNotificaciones").onclick = e => {
+  e.stopPropagation();
+  $("panelNotif").classList.toggle("visible");
+  $("menuPerfil").classList.remove("visible");
+};
+$("btnMenuPerfil").onclick = e => {
+  e.stopPropagation();
+  $("menuPerfil").classList.toggle("visible");
+  $("panelNotif").classList.remove("visible");
+};
+
+// Cerrar sesión y regresar a la pantalla de inicio de sesión
+$("cerrarSesion").onclick = () => {
+  stopPosts?.(); stopUser?.(); stopNotif?.();
+  sessionStorage.clear();
+  location.href = "../codigo principal/login.html";
+};
+
+window.onclick = e => {
+  if (!e.target.closest("#btnMenuPerfil, #menuPerfil")) $("menuPerfil").classList.remove("visible");
+  if (!e.target.closest("#btnNotificaciones, #panelNotif")) $("panelNotif").classList.remove("visible");
+};
+window.onkeydown = e => {
+  if (e.key === "Escape") {
+    document.querySelectorAll(".modal.visible").forEach(m => m.classList.remove("visible"));
+    $("menuPerfil").classList.remove("visible");
+    $("panelNotif").classList.remove("visible");
+  }
+};
+
+listoUsuario.then(() => {
+  if (refUsuario) {
+    verPosts();
+    verNotificaciones();
+  }
+});
+</script>
+</body>
+</html>

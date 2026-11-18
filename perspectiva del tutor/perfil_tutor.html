@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil del Tutor | UV</title>
+<style>
+/* Configuración general de la página y contenedor con imagen de fondo */
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;font-family:Arial,sans-serif;overflow:hidden;background:#edf5ff;color:#102b59;}
+.pantalla{position:relative;width:100vw;height:100vh;min-width:900px;min-height:560px;background:url("../imagenes/tutorados/perfil_tutor.png") center/100% 100% no-repeat;}
+
+/* Clase base para áreas y botones transparentes sobre los iconos del diseño */
+.zona{position:absolute;z-index:20;border:0;background:0 0;cursor:pointer;border-radius:8px;}
+.zona:hover{background:rgba(20,120,230,.08);}
+.zona:focus-visible{outline:2px solid #1677e8;}
+
+/* Botones del menú lateral izquierdo alineados con los 5 iconos del diseño del tutor */
+.nav-inicio{left:.4%;top:15.7%;width:10.2%;height:4.8%;}
+.nav-calendario{left:.4%;top:21.8%;width:10.2%;height:4.8%;}
+.nav-chats{left:.4%;top:28.2%;width:10.2%;height:4.8%;}
+.nav-perfil{left:.4%;top:34.4%;width:10.2%;height:4.8%;}
+.nav-config{left:.4%;top:40.8%;width:10.2%;height:4.8%;}
+
+/* Accesos superiores, foto de perfil y botón de cámara azul */
+#btnNotificaciones{left:82.2%;top:1%;width:3.5%;height:6%;}
+#btnMenuPerfil{left:86.5%;top:1%;width:7.5%;height:6%;}
+#btnFotoPerfil{left:26.8%;top:33.8%;width:3.0%;height:5.2%;border-radius:50%;z-index:22;}
+#fotoPerfilVisible{position:absolute;z-index:12;left:19.8%;top:21.8%;width:9.3%;height:16.6%;border-radius:50%;object-fit:cover;display:none;pointer-events:none;}
+#fotoPerfilVisible.visible{display:block;}
+#inputFotoPerfil{display:none;}
+
+/* Nombre del tutor, botón de lápiz para editarlo, descripción y botón "Editar descripción" */
+#nombrePerfilWrap{position:absolute;z-index:13;left:13.2%;top:43.0%;width:22.5%;min-height:5%;display:flex;align-items:center;justify-content:center;gap:7px;padding:2px 5px;}
+#nombreTutorVisible{margin:0;color:#102b59;text-align:center;font-size:clamp(15px,1.35vw,23px);font-weight:700;line-height:1.2;overflow-wrap:anywhere;}
+#btnEditarNombre{flex:0 0 27px;width:27px;height:27px;display:flex;align-items:center;justify-content:center;border:0;border-radius:50%;background:0 0;color:#123f91;font-size:20px;cursor:pointer;}
+#btnEditarNombre:hover{background:rgba(20,120,230,.1);}
+#descripcionVisible{position:absolute;z-index:12;left:14.0%;top:56.5%;width:21.0%;height:18.0%;overflow:auto;display:flex;align-items:center;justify-content:center;padding:8px 12px;color:#294767;text-align:center;font-size:clamp(11px,.9vw,15px);line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;}
+#btnEditarDescripcion{position:absolute;z-index:22;left:15.1%;top:78.3%;width:19.1%;height:6.0%;border:0;background:0 0;border-radius:30px;cursor:pointer;}
+#btnEditarDescripcion:hover{background:rgba(20,120,230,.08);}
+
+/* Tarjeta superior derecha para crear publicaciones y sus botones (Imagen, Video, Archivo, Publicar) */
+#formPublicacion{position:absolute;z-index:12;left:38.4%;top:18.5%;width:58.0%;height:22.3%;}
+#textoPublicacion{position:absolute;left:12.6%;top:12%;width:84.5%;height:40%;resize:none;padding:10px 14px;border:0;outline:0;border-radius:16px;background:0 0;color:#17345e;font:clamp(12px,1vw,17px) Arial,sans-serif;}
+#textoPublicacion::placeholder{color:#647b9e;}
+#textoPublicacion:focus{background:rgba(255,255,255,.35);box-shadow:inset 0 0 0 2px rgba(86,139,204,.28);}
+#btnImagen{position:absolute;left:2.6%;top:61%;width:15.5%;height:27%;border:0;background:0 0;border-radius:12px;cursor:pointer;}
+#btnVideo{position:absolute;left:20.2%;top:61%;width:14.3%;height:27%;border:0;background:0 0;border-radius:12px;cursor:pointer;}
+#btnArchivo{position:absolute;left:36.4%;top:61%;width:15.7%;height:27%;border:0;background:0 0;border-radius:12px;cursor:pointer;}
+#btnPublicar{position:absolute;right:2.6%;top:60.5%;width:19.8%;height:28%;border:0;background:0 0;border-radius:30px;cursor:pointer;}
+#btnImagen:hover,#btnVideo:hover,#btnArchivo:hover,#btnPublicar:hover{background:rgba(20,120,230,.09);}
+
+/* Contenedor inferior derecho para mostrar la lista de publicaciones del tutor */
+#contenedorPublicaciones{position:absolute;z-index:12;left:38.4%;top:43.5%;width:58.0%;height:47.0%;overflow-y:auto;padding:8px 12px;scrollbar-width:thin;scrollbar-color:#b7cce6 transparent;}
+.estado-vacio{height:100%;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;color:#7489a8;text-align:center;font-size:14px;}
+.post{position:relative;margin:0 0 12px;padding:16px;border:1px solid #dce8f6;border-radius:14px;background:rgba(255,255,255,.96);box-shadow:0 3px 12px rgba(35,93,145,.07);color:#173a63;overflow-wrap:anywhere;}
+.post-cabecera{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.avatar-post{width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;border-radius:50%;background:#9db4d0;color:#fff;font-weight:700;}
+.post-identidad{display:flex;flex-direction:column;gap:3px;font-size:13px;font-weight:700;}
+.post-identidad small{font-size:11px;font-weight:400;color:#7188a1;}
+.post-texto{margin:8px 0 0;color:#294767;font-size:14px;line-height:1.5;white-space:pre-wrap;}
+.post-fecha{display:block;margin-top:9px;color:#8292a6;font-size:10px;}
+.btn-eliminar-post{position:absolute;right:12px;top:12px;border:1px solid #ffd5d9;border-radius:7px;background:#fff5f5;color:#c62828;padding:6px 9px;font-size:11px;cursor:pointer;}
+.menu-perfil{position:absolute;z-index:40;right:2%;top:7%;width:210px;display:none;padding:13px;border:1px solid #dce8f6;border-radius:12px;background:#fff;box-shadow:0 8px 25px #0002;color:#17345e;font-size:12px;}
+.menu-perfil.visible{display:block;}
+.menu-perfil strong{display:block;margin-bottom:6px;overflow-wrap:anywhere;}
+.menu-perfil button{width:100%;padding:9px;border:0;border-radius:7px;background:#f2f6fc;text-align:left;color:#17345e;cursor:pointer;}
+.modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:16px;background:rgba(0,15,40,.55);}
+.modal.visible{display:flex;}
+.modal-contenido{width:min(100%,480px);padding:24px;border-radius:16px;background:#fff;box-shadow:0 10px 35px #0003;}
+.modal-contenido h2{margin:0 0 8px;color:#123f91;font-size:20px;}
+.modal-contenido p{margin:0 0 15px;color:#64748b;font-size:13px;line-height:1.5;}
+.modal-contenido textarea,.modal-contenido input{width:100%;padding:11px 12px;border:1px solid #d5e1ee;border-radius:9px;outline:0;color:#17345e;font:14px Arial,sans-serif;}
+.modal-contenido textarea{min-height:130px;resize:vertical;}
+.modal-contenido input{min-height:43px;}
+.modal-contenido input:focus,.modal-contenido textarea:focus{border-color:#2878d8;box-shadow:0 0 0 2px #dcecff;}
+.botones-modal{display:flex;gap:9px;margin-top:16px;}
+.botones-modal button{flex:1;min-height:40px;border:0;border-radius:8px;font-weight:700;cursor:pointer;}
+.btn-guardar{background:#0877ee;color:#fff;}
+.btn-cancelar{background:#e8edf3;color:#334155;}
+.botones-modal button:disabled{opacity:.6;cursor:wait;}
+.mensaje{position:fixed;z-index:150;left:50%;bottom:18px;transform:translateX(-50%);display:none;max-width:90%;padding:12px 17px;border-radius:9px;background:#073967;color:#fff;box-shadow:0 5px 18px #0002;font-size:13px;}
+.mensaje.visible{display:block;}
+.overlay-carga{position:fixed;inset:0;z-index:120;display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.7);color:#0755b8;font-weight:700;}
+.overlay-carga.visible{display:flex;}
+body.solo-lectura #formPublicacion,body.solo-lectura #btnFotoPerfil,body.solo-lectura #btnEditarNombre,body.solo-lectura #btnEditarDescripcion{display:none!important;}
+.input-archivo-publicacion{display:none!important;}
+@media(max-width:1050px){#contenedorPublicaciones{height:40%;}.post{padding:12px;}}
+</style>
+</head>
+<body>
+
+<main class="pantalla" id="pantalla">
+  <!-- Menú lateral de navegación del tutor -->
+  <a class="zona nav-inicio" href="pantalla_principal_tutor.html" aria-label="Inicio" title="Inicio"></a>
+  <a class="zona nav-calendario" href="calendario_tutor.html" aria-label="Calendario" title="Calendario"></a>
+  <a class="zona nav-chats" href="chats_tutor.html" aria-label="Chats" title="Chats"></a>
+  <a class="zona nav-perfil" href="perfil_tutor.html" aria-label="Perfil" title="Perfil"></a>
+  <a class="zona nav-config" id="btnConfiguracion" href="configuracion_tutor.html" aria-label="Configuración" title="Configuración"></a>
+
+  <button class="zona" id="btnNotificaciones" type="button" aria-label="Notificaciones"></button>
+  <button class="zona" id="btnMenuPerfil" type="button" aria-label="Menú de usuario"></button>
+
+  <img id="fotoPerfilVisible" alt="Foto de perfil del tutor">
+  <button class="zona" id="btnFotoPerfil" type="button" aria-label="Cambiar foto de perfil" title="Cambiar foto de perfil"></button>
+  <input id="inputFotoPerfil" type="file" accept="image/png,image/jpeg,image/webp" aria-label="Seleccionar foto de perfil">
+
+  <div id="nombrePerfilWrap">
+    <h2 id="nombreTutorVisible">Nombre del Tutor</h2>
+    <button id="btnEditarNombre" type="button" aria-label="Editar nombre">✎</button>
+  </div>
+
+  <div id="descripcionVisible" aria-live="polite">Aún no has agregado una descripción.</div>
+  <button id="btnEditarDescripcion" type="button" aria-label="Editar descripción"></button>
+
+  <form id="formPublicacion">
+    <textarea id="textoPublicacion" maxlength="1500" placeholder="¿Qué quieres compartir hoy con la comunidad?" aria-label="Escribe tu publicación"></textarea>
+    <button id="btnImagen" type="button" aria-label="Imagen"></button>
+    <button id="btnVideo" type="button" aria-label="Video"></button>
+    <button id="btnArchivo" type="button" aria-label="Archivo"></button>
+    <button id="btnPublicar" type="submit" aria-label="Publicar"></button>
+    <input class="input-archivo-publicacion" id="inputImagenPublicacion" type="file" accept="image/*">
+    <input class="input-archivo-publicacion" id="inputVideoPublicacion" type="file" accept="video/*">
+    <input class="input-archivo-publicacion" id="inputArchivoPublicacion" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip,.rar">
+  </form>
+
+  <section id="contenedorPublicaciones" aria-live="polite">
+    <div class="estado-vacio">Todavía no hay publicaciones. ¡Comparte algo increíble!</div>
+  </section>
+
+  <div class="menu-perfil" id="menuPerfil">
+    <strong id="nombreMenu">Tutor</strong>
+    <button id="cerrarSesion" type="button">Cerrar sesión</button>
+  </div>
+
+  <div class="modal" id="modalNombre" role="dialog" aria-modal="true">
+    <div class="modal-contenido">
+      <h2>Actualiza tu nombre</h2>
+      <p>Este nombre se mostrará en tu perfil y en cada publicación que realices.</p>
+      <input id="textoNombrePerfil" type="text" maxlength="100" placeholder="Escribe tu nombre..." autocomplete="name">
+      <div class="botones-modal">
+        <button class="btn-cancelar" id="cancelarNombre" type="button">Cancelar</button>
+        <button class="btn-guardar" id="guardarNombre" type="button">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalDescripcion" role="dialog" aria-modal="true">
+    <div class="modal-contenido">
+      <h2>Cuéntanos sobre ti</h2>
+      <p>Escribe una breve descripción para que tus estudiantes te conozcan mejor.</p>
+      <textarea id="textoDescripcion" maxlength="500" placeholder="Escribe tu descripción aquí..."></textarea>
+      <div class="botones-modal">
+        <button class="btn-cancelar" id="cancelarDescripcion" type="button">Cancelar</button>
+        <button class="btn-guardar" id="guardarDescripcion" type="button">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mensaje" id="mensaje" role="status" aria-live="polite"></div>
+  <div class="overlay-carga" id="overlayCarga">Publicando...</div>
+</main>
+
+<script type="module">
+import { db, storage } from "../base%20de%20datos/firebase.js";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  updateDoc,
+  addDoc,
+  onSnapshot,
+  deleteDoc,
+  doc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject
+} from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
+
+const $ = id => document.getElementById(id);
+
+let temporizadorMensaje = null;
+let referenciaUsuario = null;
+let detenerPublicaciones = null;
+let detenerUsuario = null;
+let archivoSeleccionado = null;
+let tipoArchivoSeleccionado = "";
+
+const usuarioActual = (() => {
+  try {
+    return JSON.parse(sessionStorage.getItem("usuarioUV") || "null");
+  } catch (error) {
+    console.error("No se pudo leer la sesión:", error);
+    return null;
+  }
+})();
+
+if (!usuarioActual) {
+  location.replace("../codigo principal/login.html");
+  throw new Error("No existe una sesión activa.");
+}
+
+const rolActual = String(
+  usuarioActual.tipoUsuario ||
+  usuarioActual.rol ||
+  sessionStorage.getItem("tipoUsuario") ||
+  ""
+).trim().toLowerCase();
+
+const esTutor = rolActual.includes("tutor") || rolActual.includes("docente");
+const matriculaUsuario = String(usuarioActual.matricula || "").trim();
+const correoUsuario = String(usuarioActual.correo || usuarioActual.email || "").trim();
+const idUsuario = matriculaUsuario || correoUsuario;
+
+if (!idUsuario) {
+  mostrarMensaje("La sesión no contiene matrícula ni correo para identificar al usuario.", true);
+  throw new Error("No se encontró un identificador del usuario.");
+}
+
+let nombrePerfilActual = String(
+  usuarioActual.nombrePerfil ||
+  usuarioActual.nombre ||
+  usuarioActual.nombreCompleto ||
+  usuarioActual.nombres ||
+  correoUsuario ||
+  "Nombre del Tutor"
+);
+
+let descripcionActual = String(usuarioActual.descripcion || "");
+
+function mostrarMensaje(texto, error = false) {
+  const mensaje = $("mensaje");
+  if (!mensaje) return;
+  mensaje.textContent = texto;
+  mensaje.style.background = error ? "#a52b3a" : "#073967";
+  mensaje.classList.add("visible");
+  clearTimeout(temporizadorMensaje);
+  temporizadorMensaje = setTimeout(() => mensaje.classList.remove("visible"), 3500);
+}
+
+function guardarSesionActualizada() {
+  sessionStorage.setItem("usuarioUV", JSON.stringify(usuarioActual));
+}
+
+function actualizarNombreVista(texto) {
+  nombrePerfilActual = String(texto || "Nombre del Tutor");
+  $("nombreTutorVisible").textContent = nombrePerfilActual;
+  $("nombreMenu").textContent = nombrePerfilActual;
+}
+
+function actualizarDescripcionVista(texto) {
+  descripcionActual = String(texto || "");
+  $("descripcionVisible").textContent = descripcionActual || "Aún no has agregado una descripción.";
+}
+
+function actualizarFotoPerfil(url) {
+  const imagen = $("fotoPerfilVisible");
+  if (url) {
+    imagen.src = String(url);
+    imagen.classList.add("visible");
+  } else {
+    imagen.removeAttribute("src");
+    imagen.classList.remove("visible");
+  }
+}
+
+function obtenerFecha(valor) {
+  try {
+    return valor?.toDate
+      ? valor.toDate().toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" })
+      : (valor ? new Date(valor).toLocaleString("es-MX", { dateStyle: "short", timeStyle: "short" }) : "Reciente");
+  } catch {
+    return "Reciente";
+  }
+}
+
+function escaparNombreArchivo(nombre) {
+  return String(nombre || "archivo").replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+async function localizarDocumentoUsuario() {
+  if (!esTutor) return null;
+
+  try {
+    const usuariosRef = collection(db, "usuarios");
+    let resultado = null;
+
+    if (matriculaUsuario) {
+      resultado = await getDocs(query(usuariosRef, where("matricula", "==", matriculaUsuario)));
+    }
+
+    if ((!resultado || resultado.empty) && correoUsuario) {
+      resultado = await getDocs(query(usuariosRef, where("correo", "==", correoUsuario)));
+    }
+
+    if ((!resultado || resultado.empty) && correoUsuario) {
+      resultado = await getDocs(query(usuariosRef, where("email", "==", correoUsuario)));
+    }
+
+    if (!resultado || resultado.empty) {
+      mostrarMensaje("No se encontró tu usuario en Firestore. Verifica que exista en la colección usuarios con tu matrícula.", true);
+      return null;
+    }
+
+    if (resultado.size > 1) {
+      const coincidencia = resultado.docs.find(d =>
+        String(d.data().matricula || "").trim() === matriculaUsuario
+      ) || resultado.docs[0];
+      referenciaUsuario = coincidencia.ref;
+    } else {
+      referenciaUsuario = resultado.docs[0].ref;
+    }
+
+    const datos = resultado.docs.find(d => d.ref.path === referenciaUsuario.path)?.data()
+      || resultado.docs[0].data();
+
+    Object.assign(usuarioActual, datos);
+    usuarioActual.tipoUsuario = "tutor";
+
+    if (usuarioActual.nombrePerfil && !usuarioActual.nombre) {
+      usuarioActual.nombre = usuarioActual.nombrePerfil;
+    }
+
+    guardarSesionActualizada();
+    actualizarNombreVista(
+      usuarioActual.nombrePerfil ||
+      usuarioActual.nombre ||
+      usuarioActual.nombreCompleto ||
+      usuarioActual.nombres ||
+      correoUsuario ||
+      "Tutor"
+    );
+    actualizarDescripcionVista(usuarioActual.descripcion || "");
+    actualizarFotoPerfil(usuarioActual.fotoPerfilURL || usuarioActual.fotoPerfil || usuarioActual.fotoURL || "");
+
+    if (detenerUsuario) detenerUsuario();
+    detenerUsuario = onSnapshot(referenciaUsuario, snapshot => {
+      if (!snapshot.exists()) return;
+      const nuevosDatos = snapshot.data();
+      Object.assign(usuarioActual, nuevosDatos, { tipoUsuario: "tutor" });
+      guardarSesionActualizada();
+      actualizarNombreVista(
+        nuevosDatos.nombrePerfil ||
+        nuevosDatos.nombre ||
+        nuevosDatos.nombreCompleto ||
+        nuevosDatos.nombres ||
+        correoUsuario ||
+        "Tutor"
+      );
+      actualizarDescripcionVista(nuevosDatos.descripcion || "");
+      actualizarFotoPerfil(nuevosDatos.fotoPerfilURL || nuevosDatos.fotoPerfil || nuevosDatos.fotoURL || "");
+    }, error => {
+      console.error("Error al sincronizar el perfil:", error);
+      mostrarMensaje("No se pudo sincronizar el perfil en tiempo real.", true);
+    });
+
+    return referenciaUsuario;
+  } catch (error) {
+    console.error("Error al localizar el documento del tutor:", error);
+    mostrarMensaje("No se pudo consultar tu perfil en Firestore. Revisa la conexión y las reglas de lectura.", true);
+    return null;
+  }
+}
+
+const promesaUsuario = esTutor ? localizarDocumentoUsuario() : Promise.resolve(null);
+
+$("btnFotoPerfil").addEventListener("click", () => {
+  if (!esTutor) return;
+  $("inputFotoPerfil").click();
+});
+
+$("inputFotoPerfil").addEventListener("change", async () => {
+  const archivo = $("inputFotoPerfil").files?.[0];
+  if (!archivo) return;
+
+  if (!archivo.type.startsWith("image/")) {
+    $("inputFotoPerfil").value = "";
+    return mostrarMensaje("Selecciona una imagen válida.", true);
+  }
+
+  if (archivo.size > 5 * 1024 * 1024) {
+    $("inputFotoPerfil").value = "";
+    return mostrarMensaje("La foto no debe superar los 5 MB.", true);
+  }
+
+  const boton = $("btnFotoPerfil");
+  boton.disabled = true;
+
+  try {
+    await promesaUsuario;
+    if (!referenciaUsuario) {
+      throw new Error("No se encontró el documento del tutor en Firestore.");
+    }
+
+    const ruta = `fotos_perfil_tutores/${idUsuario}/${Date.now()}_${escaparNombreArchivo(archivo.name)}`;
+    const referenciaArchivo = storageRef(storage, ruta);
+    const subida = await uploadBytes(referenciaArchivo, archivo, { contentType: archivo.type });
+    const url = await getDownloadURL(subida.ref);
+
+    await updateDoc(referenciaUsuario, {
+      fotoPerfilURL: url,
+      fotoPerfilPath: ruta,
+      updatedAt: serverTimestamp()
+    });
+
+    usuarioActual.fotoPerfilURL = url;
+    usuarioActual.fotoPerfilPath = ruta;
+    guardarSesionActualizada();
+    actualizarFotoPerfil(url);
+    mostrarMensaje("¡Foto de perfil actualizada!");
+  } catch (error) {
+    console.error("Error al actualizar la foto de perfil:", error);
+    mostrarMensaje("No se pudo guardar la foto. Revisa las reglas de Firebase Storage y Firestore.", true);
+  } finally {
+    boton.disabled = false;
+    $("inputFotoPerfil").value = "";
+  }
+});
+
+$("btnEditarNombre").onclick = () => {
+  if (!esTutor) return;
+  $("textoNombrePerfil").value = nombrePerfilActual === "Nombre del Tutor" ? "" : nombrePerfilActual;
+  $("modalNombre").classList.add("visible");
+  $("textoNombrePerfil").focus();
+};
+
+$("cancelarNombre").onclick = () => $("modalNombre").classList.remove("visible");
+
+$("guardarNombre").onclick = async () => {
+  const nombre = $("textoNombrePerfil").value.trim();
+  const boton = $("guardarNombre");
+
+  if (!nombre) return mostrarMensaje("Escribe un nombre válido.", true);
+  if (!esTutor) return mostrarMensaje("Solo el tutor puede editar este perfil.", true);
+
+  boton.disabled = true;
+  boton.textContent = "Guardando...";
+
+  try {
+    await promesaUsuario;
+    if (!referenciaUsuario) {
+      throw new Error("No se encontró el documento del tutor en Firestore.");
+    }
+
+    await updateDoc(referenciaUsuario, {
+      nombre: nombre,
+      nombrePerfil: nombre,
+      nombreCompleto: nombre,
+      nombres: nombre,
+      updatedAt: serverTimestamp()
+    });
+
+    usuarioActual.nombre = nombre;
+    usuarioActual.nombrePerfil = nombre;
+    usuarioActual.nombreCompleto = nombre;
+    usuarioActual.nombres = nombre;
+    guardarSesionActualizada();
+    actualizarNombreVista(nombre);
+    $("modalNombre").classList.remove("visible");
+    mostrarMensaje("¡Nombre actualizado en la nube!");
+  } catch (error) {
+    console.error("Error al guardar el nombre:", error);
+    mostrarMensaje("No se pudo guardar el nombre en Firestore. Revisa las reglas de escritura.", true);
+  } finally {
+    boton.disabled = false;
+    boton.textContent = "Guardar";
+  }
+};
+
+$("btnEditarDescripcion").onclick = () => {
+  if (!esTutor) return;
+  $("textoDescripcion").value = descripcionActual;
+  $("modalDescripcion").classList.add("visible");
+  $("textoDescripcion").focus();
+};
+
+$("cancelarDescripcion").onclick = () => $("modalDescripcion").classList.remove("visible");
+
+$("guardarDescripcion").onclick = async () => {
+  const descripcion = $("textoDescripcion").value.trim();
+  const boton = $("guardarDescripcion");
+
+  if (!esTutor) return mostrarMensaje("Solo el tutor puede editar esta descripción.", true);
+
+  boton.disabled = true;
+  boton.textContent = "Guardando...";
+
+  try {
+    await promesaUsuario;
+    if (!referenciaUsuario) {
+      throw new Error("No se encontró el documento del tutor en Firestore.");
+    }
+
+    await updateDoc(referenciaUsuario, {
+      descripcion: descripcion,
+      updatedAt: serverTimestamp()
+    });
+
+    usuarioActual.descripcion = descripcion;
+    guardarSesionActualizada();
+    actualizarDescripcionVista(descripcion);
+    $("modalDescripcion").classList.remove("visible");
+    mostrarMensaje("¡Descripción guardada en la nube!");
+  } catch (error) {
+    console.error("Error al guardar la descripción:", error);
+    mostrarMensaje("No se pudo guardar la descripción en Firestore. Revisa las reglas de escritura.", true);
+  } finally {
+    boton.disabled = false;
+    boton.textContent = "Guardar";
+  }
+};
+
+function crearPublicacionUI(publicacion) {
+  const articulo = document.createElement("article");
+  articulo.className = "post";
+
+  const cabecera = document.createElement("div");
+  cabecera.className = "post-cabecera";
+
+  const avatar = document.createElement("span");
+  avatar.className = "avatar-post";
+  avatar.textContent = String(publicacion.autorNombre || "Tutor").charAt(0).toUpperCase();
+
+  const identidad = document.createElement("div");
+  identidad.className = "post-identidad";
+
+  const autor = document.createElement("span");
+  autor.textContent = String(publicacion.autorNombre || "Tutor");
+
+  const rol = document.createElement("small");
+  rol.textContent = "Tutor";
+
+  identidad.append(autor, rol);
+  cabecera.append(avatar, identidad);
+  articulo.append(cabecera);
+
+  if (esTutor && String(publicacion.autorId || "") === idUsuario) {
+    const eliminar = document.createElement("button");
+    eliminar.type = "button";
+    eliminar.className = "btn-eliminar-post";
+    eliminar.textContent = "Eliminar";
+    eliminar.addEventListener("click", async () => {
+      if (!confirm("¿Seguro que deseas borrar esta publicación?")) return;
+      eliminar.disabled = true;
+      try {
+        await deleteDoc(doc(db, "publicaciones", publicacion.id));
+        if (publicacion.archivoPath) {
+          try {
+            await deleteObject(storageRef(storage, publicacion.archivoPath));
+          } catch (errorStorage) {
+            console.warn("No se pudo eliminar el archivo de Storage:", errorStorage);
+          }
+        }
+        mostrarMensaje("Publicación eliminada.");
+      } catch (error) {
+        console.error("Error al eliminar publicación:", error);
+        mostrarMensaje("No se pudo eliminar la publicación.", true);
+        eliminar.disabled = false;
+      }
+    });
+    articulo.append(eliminar);
+  }
+
+  if (publicacion.texto) {
+    const texto = document.createElement("p");
+    texto.className = "post-texto";
+    texto.textContent = String(publicacion.texto);
+    articulo.append(texto);
+  }
+
+  if (publicacion.archivoURL) {
+    const tipo = String(publicacion.tipoArchivo || "archivo").toLowerCase();
+    const url = String(publicacion.archivoURL);
+
+    if (tipo === "foto" || tipo === "imagen" || tipo === "gif") {
+      const imagen = document.createElement("img");
+      imagen.src = url;
+      imagen.alt = publicacion.archivoNombre || "Imagen publicada por el tutor";
+      imagen.style.cssText = "display:block;max-width:100%;max-height:360px;margin-top:10px;border-radius:10px;object-fit:contain;";
+      articulo.append(imagen);
+    } else if (tipo === "video") {
+      const video = document.createElement("video");
+      video.src = url;
+      video.controls = true;
+      video.preload = "metadata";
+      video.style.cssText = "display:block;width:100%;max-height:360px;margin-top:10px;border-radius:10px;background:#000;";
+      articulo.append(video);
+    } else {
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.target = "_blank";
+      enlace.rel = "noopener noreferrer";
+      enlace.className = "post-texto";
+      enlace.textContent = "📎 " + String(publicacion.archivoNombre || "Ver archivo adjunto");
+      enlace.style.display = "block";
+      articulo.append(enlace);
+    }
+  }
+
+  const fecha = document.createElement("small");
+  fecha.className = "post-fecha";
+  fecha.textContent = obtenerFecha(publicacion.fecha);
+  articulo.append(fecha);
+
+  return articulo;
+}
+
+function escucharPublicaciones() {
+  const contenedor = $("contenedorPublicaciones");
+  const consulta = esTutor
+    ? query(collection(db, "publicaciones"), where("autorId", "==", idUsuario))
+    : query(collection(db, "publicaciones"), where("autorRol", "==", "Tutor"));
+
+  detenerPublicaciones = onSnapshot(consulta, snapshot => {
+    const lista = snapshot.docs
+      .map(documento => ({ id: documento.id, ...documento.data() }))
+      .sort((a, b) => (b.fecha?.toMillis?.() || 0) - (a.fecha?.toMillis?.() || 0));
+
+    contenedor.replaceChildren();
+
+    if (!lista.length) {
+      const vacio = document.createElement("div");
+      vacio.className = "estado-vacio";
+      vacio.textContent = esTutor
+        ? "Aún no tienes publicaciones. ¡Comparte algo con tu comunidad!"
+        : "No hay publicaciones de tutores disponibles.";
+      contenedor.append(vacio);
+      return;
+    }
+
+    lista.forEach(publicacion => {
+      contenedor.appendChild(crearPublicacionUI(publicacion));
+    });
+  }, error => {
+    console.error("Error al sincronizar publicaciones:", error);
+    mostrarMensaje("Error al sincronizar las publicaciones. Revisa las reglas de Firestore.", true);
+  });
+}
+
+$("btnImagen").addEventListener("click", () => $("inputImagenPublicacion").click());
+$("btnVideo").addEventListener("click", () => $("inputVideoPublicacion").click());
+$("btnArchivo").addEventListener("click", () => $("inputArchivoPublicacion").click());
+
+function registrarArchivoSeleccionado(inputId, tipo) {
+  $(inputId).addEventListener("change", () => {
+    const archivo = $(inputId).files?.[0] || null;
+    if (!archivo) return;
+
+    const limiteBytes = 50 * 1024 * 1024;
+    if (archivo.size > limiteBytes) {
+      $(inputId).value = "";
+      archivoSeleccionado = null;
+      tipoArchivoSeleccionado = "";
+      return mostrarMensaje("El archivo supera el límite de 50 MB.", true);
+    }
+
+    archivoSeleccionado = archivo;
+    tipoArchivoSeleccionado = tipo;
+    mostrarMensaje("Archivo seleccionado: " + archivo.name);
+  });
+}
+
+registrarArchivoSeleccionado("inputImagenPublicacion", "foto");
+registrarArchivoSeleccionado("inputVideoPublicacion", "video");
+registrarArchivoSeleccionado("inputArchivoPublicacion", "archivo");
+
+async function subirArchivoPublicacion(archivo, tipo) {
+  const nombreSeguro = escaparNombreArchivo(archivo.name);
+  const ruta = `publicaciones_tutor/${idUsuario}/${Date.now()}_${nombreSeguro}`;
+  const referencia = storageRef(storage, ruta);
+  const resultado = await uploadBytes(referencia, archivo, {
+    contentType: archivo.type || "application/octet-stream"
+  });
+  const url = await getDownloadURL(resultado.ref);
+
+  return {
+    archivoURL: url,
+    archivoPath: ruta,
+    archivoNombre: archivo.name,
+    archivoMime: archivo.type || "application/octet-stream",
+    tipoArchivo: tipo
+  };
+}
+
+$("formPublicacion").addEventListener("submit", async evento => {
+  evento.preventDefault();
+
+  if (!esTutor) {
+    return mostrarMensaje("Solo los tutores pueden realizar publicaciones.", true);
+  }
+
+  const texto = $("textoPublicacion").value.trim();
+  const archivo = archivoSeleccionado;
+
+  if (!texto && !archivo) {
+    return mostrarMensaje("Escribe un mensaje o selecciona un archivo antes de publicar.", true);
+  }
+
+  const boton = $("btnPublicar");
+  boton.disabled = true;
+  $("overlayCarga").textContent = archivo ? "Subiendo y guardando publicación..." : "Guardando publicación...";
+  $("overlayCarga").classList.add("visible");
+
+  try {
+    await promesaUsuario;
+    if (!referenciaUsuario) {
+      throw new Error("No se encontró el documento del tutor en la colección usuarios.");
+    }
+
+    let datosArchivo = {
+      archivoURL: null,
+      archivoPath: null,
+      archivoNombre: "",
+      archivoMime: "",
+      tipoArchivo: ""
+    };
+
+    if (archivo) {
+      datosArchivo = await subirArchivoPublicacion(archivo, tipoArchivoSeleccionado);
+    }
+
+    await addDoc(collection(db, "publicaciones"), {
+      texto,
+      encuesta: null,
+      ...datosArchivo,
+      autorNombre: nombrePerfilActual,
+      autorId: idUsuario,
+      autorMatricula: matriculaUsuario,
+      autorCorreo: correoUsuario,
+      autorRol: "Tutor",
+      fecha: serverTimestamp()
+    });
+
+    $("textoPublicacion").value = "";
+    ["inputImagenPublicacion", "inputVideoPublicacion", "inputArchivoPublicacion"].forEach(id => {
+      $(id).value = "";
+    });
+    archivoSeleccionado = null;
+    tipoArchivoSeleccionado = "";
+    mostrarMensaje("¡Publicación guardada en la nube!");
+  } catch (error) {
+    console.error("Error al publicar:", error);
+    mostrarMensaje("No se pudo publicar. Revisa las reglas de Firestore y Storage.", true);
+  } finally {
+    $("overlayCarga").classList.remove("visible");
+    $("overlayCarga").textContent = "Publicando...";
+    boton.disabled = false;
+  }
+});
+
+$("btnNotificaciones").onclick = () => mostrarMensaje("¡Todo al día! No tienes notificaciones nuevas.");
+$("btnMenuPerfil").onclick = () => $("menuPerfil").classList.toggle("visible");
+
+// Cierra la sesión actual y redirige a la pantalla de login
+$("cerrarSesion").onclick = () => {
+  if (detenerPublicaciones) detenerPublicaciones();
+  if (detenerUsuario) detenerUsuario();
+  sessionStorage.removeItem("usuarioUV");
+  sessionStorage.removeItem("perfilSeleccionadoUV");
+  sessionStorage.removeItem("tipoUsuario");
+  location.href = "../codigo principal/login.html";
+};
+
+window.addEventListener("click", evento => {
+  if (!evento.target.closest("#btnMenuPerfil") && !evento.target.closest("#menuPerfil")) {
+    $("menuPerfil").classList.remove("visible");
+  }
+});
+
+window.addEventListener("keydown", evento => {
+  if (evento.key === "Escape") {
+    document.querySelectorAll(".modal.visible").forEach(modal => modal.classList.remove("visible"));
+    $("menuPerfil").classList.remove("visible");
+  }
+});
+
+if (esTutor) {
+  document.body.classList.remove("solo-lectura");
+  actualizarNombreVista(nombrePerfilActual);
+  actualizarDescripcionVista(descripcionActual);
+  actualizarFotoPerfil(usuarioActual.fotoPerfilURL || usuarioActual.fotoPerfil || usuarioActual.fotoURL || "");
+  $("btnFotoPerfil").style.display = "";
+} else {
+  document.body.classList.add("solo-lectura");
+  actualizarNombreVista("Publicaciones de Tutores");
+  actualizarDescripcionVista("Explora los avisos y recursos compartidos por la comunidad de tutores.");
+  $("btnFotoPerfil").style.display = "none";
+}
+
+escucharPublicaciones();
+</script>
+</body>
+</html>

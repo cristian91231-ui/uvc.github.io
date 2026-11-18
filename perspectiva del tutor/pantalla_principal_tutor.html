@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicio | Panel del Tutor UV</title>
+    <style>
+        /* CSS Optimizado y Humanizado */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; font-family: Arial, sans-serif; overflow: hidden; background: #f4faff; }
+        
+        .pantalla { position: relative; width: 100vw; height: 100vh; min-height: 500px; background: #e8f1fc url("../imagenes/tutorados/pantalla_principal_tutor.png") center/100% 100% no-repeat; }
+        
+        /* Controles interactivos generales */
+        .zona, .materia, .menu-flecha, .btn-notif { position: absolute; z-index: 10; background: transparent; border: 0; cursor: pointer; border-radius: 12px; transition: background 0.2s; }
+        .zona:hover, .menu-flecha:hover { background: rgba(255, 255, 255, 0.1); }
+        .zona:focus-visible, .materia:focus-visible { outline: 2px solid #1677e8; outline-offset: -3px; }
+        
+        /* Materias */
+        .materia { z-index: 25; text-decoration: none; border-radius: 15px; width: 27.5%; height: 11.5%; }
+        .materia:hover { background: rgba(20, 120, 230, 0.06); }
+        #materiaPensamiento { left: 13%; top: 28%; }
+        #materiaProgramacion { left: 42%; top: 28%; }
+        #materiaLogica { left: 71%; top: 28%; }
+        #materiaAlgebra { left: 13%; top: 42.5%; }
+        #materiaFundamentos { left: 42%; top: 42.5%; }
+        #materiaLiteracidad { left: 71%; top: 42.5%; }
+
+        /* Buscador */
+        .busqueda { position: absolute; z-index: 15; left: 13%; top: 1.5%; width: 51%; height: 4.5%; padding: 0 14px 0 45px; border: 0; border-radius: 12px; outline: 0; background: transparent; color: #14294e; font: 600 13px Arial, sans-serif; }
+        .busqueda:focus { background: rgba(238, 246, 255, 0.98); box-shadow: 0 0 0 2px #b9d9fb; }
+        
+        .sugerencias { position: absolute; z-index: 30; left: 13%; top: 6.5%; width: min(51%, 700px); max-height: 260px; overflow-y: auto; display: none; padding: 6px; border: 1px solid #dce8f6; border-radius: 12px; background: #fff; box-shadow: 0 8px 25px rgba(24, 65, 110, 0.14); }
+        .sugerencias.visible { display: block; }
+        .sugerencia { display: flex; flex-direction: column; width: 100%; gap: 4px; padding: 11px 12px; border: 0; border-radius: 8px; background: #fff; text-align: left; color: #11284e; cursor: pointer; }
+        .sugerencia:hover { background: #edf6ff; }
+        .sugerencia small { color: #6c809a; }
+
+        /* Botones del menú lateral izquierdo alineados con los 5 iconos del diseño del tutor */
+        .nav-inicio     { left: .4%; top: 15.7%; width: 10.2%; height: 4.8%; }
+        .nav-calendario { left: .4%; top: 21.8%; width: 10.2%; height: 4.8%; }
+        .nav-chats      { left: .4%; top: 28.2%; width: 10.2%; height: 4.8%; }
+        .nav-perfil     { left: .4%; top: 34.4%; width: 10.2%; height: 4.8%; }
+        .nav-config     { left: .4%; top: 40.8%; width: 10.2%; height: 4.8%; }
+
+        /* Botones de la barra superior derecha (Notificaciones, Foto de perfil y Flecha de menú) */
+        .btn-notif { z-index: 20; left: 84.6%; top: 1%; width: 3.4%; height: 5.5%; }
+        .btn-notif:hover { background: rgba(20, 120, 230, 0.08); }
+        .badge-notif { position: absolute; top: 15%; right: 15%; background: #e53935; color: #fff; font-size: 10px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: none; align-items: center; justify-content: center; pointer-events: none; }
+        
+        .perfil { left: 88.4%; top: 0.8%; width: 3.6%; height: 5.8%; border-radius: 50%; }
+        .perfil:hover { background: rgba(20, 120, 230, 0.08); }
+        .info-usuario-top { position: absolute; z-index: 15; left: 92.2%; top: 1.5%; display: flex; flex-direction: column; color: #14294e; pointer-events: none; }
+        .info-usuario-top strong { font-size: 13px; }
+        .info-usuario-top small { font-size: 11px; color: #73849a; }
+        /* Botón transparente sobre la flecha ⌄ de la imagen superior derecha */
+        .menu-flecha { left: 96.5%; top: 1%; width: 2.8%; height: 5.5%; color: transparent; font-size: 0; }
+        .menu-flecha:hover { background: rgba(20, 120, 230, 0.08); }
+
+        /* Paneles Desplegables */
+        .panel-flotante { position: absolute; z-index: 60; display: none; background: #fff; border-radius: 11px; box-shadow: 0 10px 28px rgba(0,0,0,0.1); }
+        .panel-flotante.visible { display: block; }
+        
+        .menu-usuario-panel { right: 1.5%; top: 7%; min-width: 190px; padding: 13px; border: 1px solid #dce7f4; color: #17345e; }
+        .menu-usuario-panel strong { display: block; font-size: 13px; margin-bottom: 3px; }
+        .menu-usuario-panel small { display: block; color: #73849a; margin-bottom: 10px; }
+        .menu-usuario-panel button { width: 100%; padding: 9px 10px; border: 0; border-radius: 7px; background: #fff0f0; color: #b42318; font-weight: 700; cursor: pointer; text-align: left; }
+
+        .panel-notif { right: 10%; top: 7.5%; width: 370px; max-height: 480px; background: #212121; color: #f1f1f1; overflow-y: auto; border: 0; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .notif-header { padding: 16px; font-weight: 700; border-bottom: 1px solid #3d3d3d; position: sticky; top: 0; background: #212121; z-index: 2; }
+        .notif-item { display: flex; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #2a2a2a; transition: background 0.2s; }
+        .notif-item:hover { background: #383838; }
+        .notif-item.no-leida { background: #2c2c2c; }
+        .notif-avatar { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; flex-shrink: 0; }
+        .notif-texto { flex: 1; font-size: 13px; color: #ccc; }
+        .notif-texto strong { color: #fff; }
+        .notif-tiempo { display: block; font-size: 11px; color: #aaa; margin-top: 5px; }
+        .notif-vacia { padding: 25px; text-align: center; color: #888; font-size: 13px; }
+
+        /* Alertas */
+        .mensaje { position: absolute; z-index: 50; left: 50%; bottom: 20px; transform: translateX(-50%); display: none; padding: 12px 17px; border-radius: 10px; background: #073967; color: #fff; box-shadow: 0 6px 20px rgba(0,0,0,0.16); font-size: 13px; }
+        .mensaje.visible { display: block; }
+    </style>
+</head>
+<body>
+
+<main class="pantalla">
+    <!-- Buscador -->
+    <input class="busqueda" id="buscarMateria" type="search" placeholder="¿Qué materia estás buscando?" autocomplete="off">
+    <div class="sugerencias" id="sugerencias"></div>
+
+    <!-- Botones de Materias -->
+    <a href="materias_tutor/pensamiento_critico_tutor.html" class="materia" id="materiaPensamiento" title="Pensamiento Crítico"></a>
+    <a href="materias_tutor/metodologia_de_la_programacion_tutor.html" class="materia" id="materiaProgramacion" title="Metodología de la Programación"></a>
+    <a href="materias_tutor/logica_tutor.html" class="materia" id="materiaLogica" title="Lógica"></a>
+    <a href="materias_tutor/algebra_lineal_tutor.html" class="materia" id="materiaAlgebra" title="Álgebra Lineal"></a>
+    <a href="materias_tutor/fundamentos_de_la_ingeneria_de_software_tutor.html" class="materia" id="materiaFundamentos" title="Fundamentos de Ingeniería de Sistemas"></a>
+    <a href="materias_tutor/literacidad_digital_tutor.html" class="materia" id="materiaLiteracidad" title="Literacidad Digital"></a>
+
+    <!-- Navegación lateral -->
+    <a href="pantalla_principal_tutor.html" class="zona nav-inicio" title="Inicio"></a>
+    <a href="calendario_tutor.html" class="zona nav-calendario" title="Calendario"></a>
+    <a href="chats_tutor.html" class="zona nav-chats" title="Chats"></a>
+    <a href="perfil_tutor.html" class="zona nav-perfil" title="Perfil"></a>
+    <a href="configuracion_tutor.html" class="zona nav-config" title="Configuración"></a>
+
+    <!-- Controles de Usuario -->
+    <button class="btn-notif" id="btnNotificaciones" title="Notificaciones"><span class="badge-notif" id="badgeNotif">0</span></button>
+    <a href="perfil_tutor.html" class="zona perfil" title="Ir al Perfil"></a>
+    
+    <div class="info-usuario-top">
+        <strong id="nombreTutor">Tutor</strong>
+        <small id="rolTutor">Tutor</small>
+    </div>
+    
+    <!-- Botón invisible sobre la flecha superior derecha para desplegar el menú de sesión -->
+    <button class="menu-flecha" id="menuFlecha" type="button" aria-label="Abrir menú de usuario" title="Menú de usuario"></button>
+    
+    <div class="panel-flotante menu-usuario-panel" id="menuUsuarioPanel">
+        <strong id="nombreTutorMenu">Tutor</strong>
+        <small id="rolTutorMenu">Tutor</small>
+        <button id="cerrarSesion" type="button">Cerrar sesión</button>
+    </div>
+
+    <!-- Panel de Notificaciones -->
+    <div class="panel-flotante panel-notif" id="panelNotificaciones">
+        <div class="notif-header">Notificaciones</div>
+        <div id="listaNotificaciones"><div class="notif-vacia">Esperando conexión...</div></div>
+    </div>
+
+    <!-- Toast de Mensajes -->
+    <div class="mensaje" id="mensaje"></div>
+</main>
+
+<script type="module">
+    const $ = id => document.getElementById(id);
+    let tempMsg;
+
+    const mostrarMensaje = texto => {
+        const msg = $("mensaje");
+        msg.textContent = texto;
+        msg.classList.add("visible");
+        clearTimeout(tempMsg);
+        tempMsg = setTimeout(() => msg.classList.remove("visible"), 3500);
+    };
+
+    // 1. CARGAR SESIÓN
+    const usuario = JSON.parse(sessionStorage.getItem("usuarioUV") || "{}");
+    const nombreObtenido = usuario.nombres || usuario.nombre || usuario.nombreCompleto || usuario.correo;
+    const primerNombre = nombreObtenido ? String(nombreObtenido).split(" ")[0] : "Tutor";
+    const rolSesion = String(sessionStorage.getItem("tipoUsuario") || usuario.tipoUsuario || "Tutor");
+    const rolMostrar = /estudiante/i.test(rolSesion) ? "Estudiante" : "Tutor";
+    const idUsuario = String(usuario.matricula || usuario.correo || "").trim();
+
+    $("nombreTutor").textContent = $("nombreTutorMenu").textContent = primerNombre;
+    $("rolTutor").textContent = $("rolTutorMenu").textContent = rolMostrar;
+
+    // 2. BUSCADOR
+    const materias = [
+        { nombre: "Pensamiento Crítico", nrc: "24143", aula: "Aula 16", ruta: "materias_tutor/pensamiento_critico_tutor.html" },
+        { nombre: "Metodología de la Programación", nrc: "23099", aula: "Aula 16", ruta: "materias_tutor/metodologia_de_la_programacion_tutor.html" },
+        { nombre: "Lógica", nrc: "24142", aula: "Aula 16", ruta: "materias_tutor/logica_tutor.html" },
+        { nombre: "Álgebra Lineal", nrc: "24141", aula: "Aula 16", ruta: "materias_tutor/algebra_lineal_tutor.html" },
+        { nombre: "Fundamentos de Ingeniería de Sistemas", nrc: "24140", aula: "Aula 16", ruta: "materias_tutor/fundamentos_de_la_ingeneria_de_software_tutor.html" },
+        { nombre: "Literacidad Digital", nrc: "24144", aula: "CENT. COM1", ruta: "materias_tutor/literacidad_digital_tutor.html" }
+    ];
+
+    const normalizar = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+    const busqueda = $("buscarMateria"), sugerencias = $("sugerencias");
+
+    busqueda.addEventListener("input", () => {
+        const query = normalizar(busqueda.value);
+        sugerencias.innerHTML = "";
+        if (!query) return sugerencias.classList.remove("visible");
+
+        const filtradas = materias.filter(m => normalizar(m.nombre).includes(query) || normalizar(m.nrc).includes(query));
+        if (!filtradas.length) return sugerencias.classList.remove("visible");
+
+        filtradas.forEach(m => {
+            const btn = document.createElement("button");
+            btn.className = "sugerencia";
+            btn.innerHTML = `<strong>${m.nombre}</strong><small>NRC: ${m.nrc} · ${m.aula}</small>`;
+            btn.onclick = () => window.location.href = m.ruta;
+            sugerencias.appendChild(btn);
+        });
+        sugerencias.classList.add("visible");
+    });
+
+    busqueda.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const hit = materias.find(m => normalizar(m.nombre).includes(normalizar(busqueda.value)) || normalizar(m.nrc) === normalizar(busqueda.value));
+            hit ? window.location.href = hit.ruta : mostrarMensaje("No encontramos esa materia.");
+        }
+    });
+
+    // 3. INTERFAZ (Paneles)
+    const togglePanel = (idPanel, btnReferencia) => {
+        const panel = $(idPanel);
+        const estabaVisible = panel.classList.contains("visible");
+        document.querySelectorAll('.panel-flotante').forEach(p => p.classList.remove("visible"));
+        if (!estabaVisible) panel.classList.add("visible");
+    };
+
+    // Eventos de los botones de notificaciones, menú desplegable y cerrar sesión
+    $("btnNotificaciones").onclick = e => { e.stopPropagation(); togglePanel("panelNotificaciones"); };
+    $("menuFlecha").onclick = e => { e.stopPropagation(); togglePanel("menuUsuarioPanel"); };
+    $("cerrarSesion").onclick = () => { sessionStorage.clear(); window.location.href = "../codigo principal/login.html"; };
+
+    // Cierra los paneles desplegables al hacer clic fuera de ellos
+    document.onclick = e => {
+        if (!e.target.closest("#btnNotificaciones") && !e.target.closest("#panelNotificaciones")) $("panelNotificaciones").classList.remove("visible");
+        if (!e.target.closest("#menuFlecha") && !e.target.closest("#menuUsuarioPanel")) $("menuUsuarioPanel").classList.remove("visible");
+        if (e.target !== busqueda && !sugerencias.contains(e.target)) sugerencias.classList.remove("visible");
+    };
+
+    // 4. FIREBASE NOTIFICACIONES (escucha las notificaciones en tiempo real desde Firestore)
+    const cargarNotificaciones = async () => {
+        try {
+            const { db } = await import("../base de datos/firebase.js");
+            const { collection, query, where, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js");
+
+            const calcularTiempo = f => {
+                if (!f) return "Recientemente";
+                const diff = Math.floor((Date.now() - (f.toDate ? f.toDate() : new Date(f)).getTime()) / 1000);
+                if (diff < 60) return "hace unos segundos";
+                if (diff < 3600) return `hace ${Math.floor(diff/60)} min`;
+                if (diff < 86400) return `hace ${Math.floor(diff/3600)} horas`;
+                return `hace ${Math.floor(diff/86400)} días`;
+            };
+
+            const qNotif = query(collection(db, "notificaciones"), where("para", "in", [idUsuario, "todos", "tutores"]));
+            onSnapshot(qNotif, snap => {
+                const notifs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.fecha?.toMillis?.() || 0) - (a.fecha?.toMillis?.() || 0));
+                
+                const contenedor = $("listaNotificaciones");
+                contenedor.innerHTML = "";
+                const noLeidas = notifs.filter(n => !n.leida).length;
+                $("badgeNotif").style.display = noLeidas > 0 ? "flex" : "none";
+                $("badgeNotif").textContent = noLeidas;
+
+                if (!notifs.length) return contenedor.innerHTML = `<div class="notif-vacia">No tienes notificaciones nuevas.</div>`;
+
+                notifs.forEach(n => {
+                    const iconBg = n.tipo === "mensaje" ? "#28a745" : n.tipo === "comentario" ? "#ffc107" : "#0D8ABC";
+                    const iconTxt = n.tipo === "mensaje" ? "💬" : n.tipo === "comentario" ? "📝" : "UV";
+                    contenedor.innerHTML += `
+                        <div class="notif-item ${!n.leida ? 'no-leida' : ''}">
+                            <div class="notif-avatar" style="background:${iconBg}">${iconTxt}</div>
+                            <div class="notif-texto"><strong>${n.titulo || "Aviso"}</strong>: ${n.mensaje || ""}<span class="notif-tiempo">${calcularTiempo(n.fecha)}</span></div>
+                        </div>`;
+                });
+            });
+        } catch (e) {
+            $("listaNotificaciones").innerHTML = `<div class="notif-vacia">Módulo en mantenimiento.</div>`;
+        }
+    };
+    cargarNotificaciones();
+</script>
+</body>
+</html>

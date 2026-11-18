@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chats | Estudiante UV</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; font-family: Arial, Helvetica, sans-serif; }
+    body { overflow: hidden; background: #edf5ff; color: #12295a; }
+
+    .pantalla {
+      position: relative; width: 100vw; height: 100vh; min-width: 900px; min-height: 560px; overflow: hidden;
+      background: url("../imagenes/estudiantes/chats_estudiantes.png") center/100% 100% no-repeat;
+    }
+
+    .zona { position: absolute; z-index: 10; border: 0; background: transparent; padding: 0; cursor: pointer; }
+    .zona:focus-visible { outline: 2px solid #0877ee; outline-offset: 2px; border-radius: 8px; }
+
+    /* Botones de navegación lateral invisibles alineados con los iconos del diseño */
+    .nav-inicio     { left: .3%; top: 15.7%; width: 9.2%; height: 4.2%; border-radius: 8px; }
+    .nav-avisos     { left: .3%; top: 21.1%; width: 9.2%; height: 4.2%; border-radius: 8px; }
+    .nav-calendario { left: .3%; top: 26.4%; width: 9.2%; height: 4.2%; border-radius: 8px; }
+    .nav-chats      { left: .3%; top: 31.4%; width: 9.2%; height: 4.2%; border-radius: 8px; }
+    .nav-perfil     { left: .3%; top: 37.0%; width: 9.2%; height: 4.2%; border-radius: 8px; }
+    .nav-config     { left: .3%; top: 41.7%; width: 9.5%; height: 4.2%; border-radius: 8px; }
+    .volver         { left: 11.7%; top: 6.7%; width: 19%; height: 5.2%; border-radius: 8px; }
+
+    /* Botones de la barra superior derecha (Notificaciones, Foto de perfil y Menú) */
+    .notificaciones { left: 85.4%; top: .4%; width: 3.0%; height: 5.2%; border-radius: 8px; }
+    .perfil-foto    { left: 89.6%; top: .4%; width: 2.9%; height: 5.2%; border-radius: 50%; z-index: 20; }
+    .menu-usuario   { left: 92.8%; top: .3%; width: 6.4%; height: 5.4%; border-radius: 8px; }
+    .notificaciones:hover, .perfil-foto:hover, .menu-usuario:hover { background: rgba(20, 120, 230, .08); }
+
+    /* Buscador y lista de conversaciones alineados exactamente con las cajas de chats_estudiantes.png (1920x1080) */
+    #buscarChat {
+      position: absolute; z-index: 12; left: 17.2%; top: 25.8%; width: 21.3%; height: 6.7%;
+      padding: 0 12px; border: 0; outline: none; background: transparent;
+      color: #17315e; font: clamp(12px, 1.05vw, 18px) Arial, sans-serif;
+    }
+    #buscarChat::placeholder { color: #536078; opacity: 1; }
+    #buscarChat:focus { background: rgba(255, 255, 255, .25); border-radius: 10px; box-shadow: 0 0 0 2px rgba(91, 148, 217, .45); }
+
+    .lista-chats {
+      position: absolute; z-index: 11; left: 13.8%; top: 34.0%; width: 25.2%; height: 61.5%;
+      overflow: auto; padding: 4px 5px 12px; display: flex; flex-direction: column; gap: 4px;
+      scrollbar-width: thin; scrollbar-color: #b7cce6 transparent;
+    }
+
+    .chat-item {
+      position: relative; display: grid; grid-template-columns: 48px minmax(0, 1fr) auto;
+      align-items: center; gap: 10px; width: 100%; min-height: 75px; padding: 9px 8px;
+      border: 0; border-bottom: 1px solid rgba(169, 190, 218, .55); border-radius: 9px;
+      background: rgba(255, 255, 255, .32); color: #142c5b; text-align: left; cursor: pointer;
+    }
+    .chat-item:hover { background: rgba(218, 235, 255, .62); }
+    .chat-item.active { background: rgba(197, 222, 252, .72); box-shadow: inset 3px 0 #1677dc; }
+
+    .avatar {
+      width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+      flex: none; background: #c8def8; color: #123b73; font-size: 15px; font-weight: bold;
+    }
+    .chat-detalle { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+    .chat-nombre { font-size: clamp(12px, .95vw, 16px); font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-preview { font-size: clamp(10px, .82vw, 14px); color: #263d66; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .chat-hora { align-self: start; padding-top: 5px; font-size: clamp(10px, .78vw, 13px); color: #607391; white-space: nowrap; }
+
+    .chat-no-leidos {
+      position: absolute; right: 9px; bottom: 8px; min-width: 18px; height: 18px; padding: 0 5px;
+      border-radius: 20px; background: #0877ee; color: #fff; font-size: 10px; font-weight: bold;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .lista-estado { padding: 16px 9px; color: #6f809b; font-size: clamp(11px, .82vw, 14px); line-height: 1.45; }
+    .chat-candidato {
+      margin: 8px 4px; padding: 12px; border: 1px solid #b9d2ef; border-radius: 11px;
+      background: rgba(240, 247, 255, .96); color: #17345e; cursor: pointer; text-align: left; font-size: 13px;
+    }
+    .chat-candidato strong { display: block; margin-bottom: 4px; }
+    .chat-candidato:hover { background: #e4f1ff; }
+
+    /* Encabezado del chat */
+    .encabezado-chat[hidden] { display: none !important; }
+    .encabezado-chat {
+      position: absolute; z-index: 11; left: 43.2%; top: 23.8%; width: 48.6%; height: 7.6%;
+      display: flex; align-items: center; gap: 14px; padding: 0 10px;
+      border-bottom: 1px solid rgba(185, 206, 232, .65); pointer-events: none;
+    }
+    .avatar-grande {
+      width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center;
+      background: #c8def8; color: #123b73; font-weight: bold; font-size: 17px; flex: none;
+    }
+    .datos-contacto { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+    .datos-contacto strong { font-size: clamp(14px, 1.2vw, 20px); color: #102a5b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .datos-contacto small { font-size: clamp(11px, .9vw, 15px); color: #243c68; }
+
+    /* Mensajes */
+    .mensajes {
+      position: absolute; z-index: 11; left: 43.2%; top: 31.8%; width: 48.6%; height: 51.8%;
+      overflow-y: auto; display: flex; flex-direction: column; gap: 13px; padding: 12px 10px;
+      scrollbar-width: thin; scrollbar-color: #b7cce6 transparent;
+    }
+    .vacio-chat { margin: auto; text-align: center; color: #8392a9; font-size: 14px; line-height: 1.5; max-width: 330px; }
+
+    .burbuja {
+      max-width: 78%; align-self: flex-start; padding: 12px 15px; border-radius: 17px 17px 17px 5px;
+      background: rgba(224, 235, 249, .96); color: #102955; font-size: clamp(12px, .98vw, 17px);
+      line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; box-shadow: 0 1px 2px rgba(27, 68, 115, .04);
+    }
+    .burbuja.mia { align-self: flex-end; background: #1769c5; color: #fff; border-radius: 17px 17px 5px 17px; }
+    .burbuja small { display: block; margin-top: 5px; text-align: right; font-size: 10px; color: #71829d; }
+    .burbuja.mia small { color: #dcecff; }
+    .adjunto-mensaje { display: block; margin-top: 6px; color: inherit; text-decoration: underline; font-size: 12px; overflow-wrap: anywhere; }
+
+    /* Campo para escribir y adjuntar alineados exactamente con la barra inferior de la imagen */
+    #botonAdjuntar { position: absolute; z-index: 14; left: 43.4%; top: 86.4%; width: 3.3%; height: 7.1%; border: 0; border-radius: 12px; background: transparent; cursor: pointer; }
+    #archivoChat { display: none; }
+    #textoChat {
+      position: absolute; z-index: 13; left: 47.35%; top: 86.50%; width: 39.55%; height: 6.90%;
+      padding: 0 16px; border: 0; outline: none; border-radius: 25px; background: transparent;
+      color: #18345f; font: clamp(12px, 1.05vw, 17px) Arial, sans-serif;
+    }
+    #textoChat::placeholder { color: #596477; opacity: 1; }
+    #textoChat:focus { box-shadow: inset 0 0 0 2px rgba(88, 143, 211, .38); }
+    #botonEnviar {
+      position: absolute; z-index: 14; left: 88.02%; top: 86.39%; width: 4.32%; height: 7.04%;
+      border: 0; border-radius: 50%; background: transparent; cursor: pointer;
+    }
+    #botonEnviar:disabled, #botonAdjuntar:disabled { cursor: not-allowed; opacity: .4; }
+
+    .archivo-pendiente {
+      position: absolute; z-index: 15; left: 47.35%; top: 82.8%; max-width: 39%; padding: 4px 9px;
+      border-radius: 7px; background: #fff; color: #31557f; font-size: 11px; display: none;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+    .archivo-pendiente.visible, .menu-perfil.visible, .mensaje-sistema.visible, .panel-notificaciones.visible { display: block; }
+
+    /* Nombre de usuario en la cabecera superior derecha (entre el avatar y la flecha) */
+    .nombre-sesion {
+      position: absolute; z-index: 18; left: 92.8%; top: .3%; width: 4.3%; height: 5.4%;
+      display: flex; flex-direction: column; justify-content: center; align-items: flex-start;
+      padding: 0; border: 0; background: transparent; color: #17345e;
+      text-align: left; line-height: 1.1; pointer-events: none; overflow: hidden;
+    }
+    .nombre-sesion strong {
+      display: block; max-width: 100%; font-size: clamp(10px, .92vw, 14px);
+      font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .nombre-sesion small {
+      display: block; font-size: clamp(9px, .75vw, 11px); font-weight: 400; color: #64748b; white-space: nowrap;
+    }
+    .menu-perfil {
+      position: absolute; z-index: 30; right: 1.1%; top: 6.4%; width: 210px; padding: 13px;
+      border: 1px solid #dce8f6; border-radius: 12px; background: #fff; box-shadow: 0 8px 25px #0002;
+      display: none; font-size: 12px; color: #17345e;
+    }
+    .menu-perfil strong { display: block; margin-bottom: 7px; overflow-wrap: anywhere; }
+    .menu-perfil button { width: 100%; border: 0; border-radius: 7px; background: #fff0f0; color: #b42318; font-weight: 700; text-align: left; padding: 9px; cursor: pointer; }
+
+    .badge-notificaciones {
+      position: absolute; z-index: 25; left: 87.2%; top: .8%; min-width: 17px; height: 17px;
+      padding: 0 4px; border-radius: 20px; background: #e53935; color: #fff; font-size: 10px;
+      font-weight: bold; display: none; align-items: center; justify-content: center; pointer-events: none;
+    }
+    .badge-notificaciones.visible { display: flex; }
+
+    .panel-notificaciones {
+      position: absolute; z-index: 40; right: 8%; top: 7.2%; width: min(360px, 32vw); max-height: 55vh;
+      overflow: auto; border: 1px solid #d8e5f4; border-radius: 13px; background: #fff;
+      box-shadow: 0 10px 28px #0003; display: none; color: #17345e;
+    }
+    .panel-notificaciones h3 { margin: 0; padding: 13px 15px; border-bottom: 1px solid #e5edf7; font-size: 14px; }
+    .notificacion-chat {
+      display: block; width: 100%; padding: 12px 14px; border: 0; border-bottom: 1px solid #edf2f8;
+      background: #fff; color: #17345e; text-align: left; cursor: pointer;
+    }
+    .notificacion-chat:hover { background: #eef6ff; }
+    .notificacion-chat strong { display: block; margin-bottom: 4px; font-size: 12px; }
+    .notificacion-chat span { display: block; font-size: 11px; color: #607391; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .notificacion-vacia { padding: 18px; color: #71819a; font-size: 12px; text-align: center; }
+
+    /* Mensajes del sistema (Toast) */
+    .mensaje-sistema {
+      position: fixed; z-index: 50; bottom: 18px; left: 50%; transform: translateX(-50%);
+      display: none; max-width: 90%; background: #073967; color: #fff; padding: 12px 17px;
+      border-radius: 9px; font-size: 13px; box-shadow: 0 5px 18px #0002;
+    }
+
+    @media (max-width: 1050px) {
+      .chat-item { grid-template-columns: 36px minmax(0, 1fr) auto; gap: 7px; min-height: 64px; padding: 6px; }
+      .avatar { width: 35px; height: 35px; }
+      .avatar-grande { width: 42px; height: 42px; }
+      .burbuja { max-width: 88%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="pantalla" id="pantalla">
+    <!-- Accesos del estudiante -->
+    <a class="zona nav-inicio" id="navInicio" href="pantalla_principal.html" aria-label="Inicio" title="Inicio"></a>
+    <a class="zona nav-avisos" id="navAvisos" href="avisos_estudiantes.html" aria-label="Avisos" title="Avisos"></a>
+    <a class="zona nav-calendario" id="navCalendario" href="calendario_estudiante.html" aria-label="Calendario" title="Calendario"></a>
+    <a class="zona nav-chats" id="navChats" href="chats_estudiantes.html" aria-label="Chat" title="Chat" aria-current="page"></a>
+    <a class="zona nav-perfil" id="navPerfil" href="perfil_estudiantes.html" aria-label="Perfil" title="Perfil"></a>
+    <a class="zona nav-config" id="navConfig" href="configuracion_estudiante.html" aria-label="Configuración" title="Configuración"></a>
+    <a class="zona volver" href="pantalla_principal.html" aria-label="Volver al inicio" title="Volver al inicio"></a>
+
+    <!-- Notificaciones -->
+    <button class="zona notificaciones" id="notificaciones" type="button" aria-label="Notificaciones" title="Notificaciones"></button>
+    <span class="badge-notificaciones" id="badgeNotificaciones"></span>
+
+    <div class="panel-notificaciones" id="panelNotificaciones" aria-label="Notificaciones de mensajes">
+      <h3>Mensajes sin leer</h3>
+      <div id="listaNotificaciones">
+        <div class="notificacion-vacia">No tienes mensajes nuevos.</div>
+      </div>
+    </div>
+
+    <!-- Menú de usuario y acceso directo al perfil -->
+    <a class="zona perfil-foto" href="perfil_estudiantes.html" aria-label="Ir a mi perfil" title="Mi perfil"></a>
+    <button class="zona menu-usuario" id="menuUsuario" type="button" aria-label="Menú de usuario" title="Menú de usuario"></button>
+    <div class="nombre-sesion" id="nombreSesion" aria-label="Usuario conectado">
+      <strong id="nombreSesionTexto">Estudiante</strong>
+      <small id="rolSesion">Estudiante</small>
+    </div>
+
+    <!-- Búsqueda exclusivamente por matrícula -->
+    <input id="buscarChat" type="search" placeholder="Buscar por matrícula..." autocomplete="off" aria-label="Buscar exclusivamente por matrícula">
+
+    <!-- Lista de conversaciones -->
+    <section class="lista-chats" id="listaChats" aria-label="Conversaciones">
+      <p class="lista-estado">Cargando conversaciones...</p>
+    </section>
+
+    <!-- Encabezado de la conversación -->
+    <header class="encabezado-chat" id="encabezadoChat" hidden>
+      <div class="avatar-grande" id="avatarGrande"></div>
+      <div class="datos-contacto">
+        <strong id="nombreContacto"></strong>
+        <small id="subtituloContacto">Usuario UV</small>
+      </div>
+    </header>
+
+    <!-- Mensajes -->
+    <section class="mensajes" id="mensajes" aria-live="polite">
+      <p class="vacio-chat">Selecciona una conversación para consultar los mensajes.</p>
+    </section>
+
+    <!-- Adjuntos -->
+    <button id="botonAdjuntar" type="button" aria-label="Adjuntar archivo" title="Adjuntar archivo" disabled></button>
+    <input id="archivoChat" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.png,.jpg,.jpeg">
+    <div class="archivo-pendiente" id="archivoPendiente"></div>
+
+    <!-- Escribir y enviar -->
+    <form id="formChat">
+      <input id="textoChat" type="text" placeholder="Escribe un mensaje..." autocomplete="off" disabled>
+      <button id="botonEnviar" type="submit" aria-label="Enviar mensaje" title="Enviar mensaje" disabled></button>
+    </form>
+
+    <!-- Menú desplegable del estudiante -->
+    <div class="menu-perfil" id="menuPerfil">
+      <strong id="nombreTutor">Estudiante</strong>
+      <button id="cerrarSesion" type="button">Cerrar sesión</button>
+    </div>
+  </main>
+
+  <div class="mensaje-sistema" id="mensajeSistema" role="status" aria-live="polite"></div>
+
+  <script type="module">
+    import { db, storage } from "../base%20de%20datos/firebase.js";
+    import {
+      collection, addDoc, onSnapshot, query, where, serverTimestamp, getDocs, doc, updateDoc
+    } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+    import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-storage.js";
+
+    const $ = id => document.getElementById(id);
+
+    // --- Sesión del estudiante ---
+    function leerSesion() {
+      try {
+        return JSON.parse(sessionStorage.getItem("usuarioUV") || "null");
+      } catch (err) {
+        console.error("No se pudo leer usuarioUV:", err);
+        return null;
+      }
+    }
+
+    const usuario = leerSesion();
+    if (!usuario) {
+      location.replace("../codigo principal/login.html");
+      throw new Error("No existe una sesión activa.");
+    }
+
+    const usuarioId = String(usuario.matricula || "").trim();
+    if (!usuarioId) {
+      alert("Tu sesión no contiene una matrícula. Cierra sesión e inicia nuevamente.");
+      location.replace("../codigo principal/login.html");
+      throw new Error("La sesión no contiene matrícula.");
+    }
+
+    const nombreUsuario = String(
+      usuario.nombre || usuario.nombreCompleto || usuario.nombres || usuario.correo || "Estudiante"
+    ).trim();
+
+    const rolUsuario = "estudiante";
+    const etiquetaRol = "Estudiante";
+    const mensajesRef = collection(db, "mensajesTutor");
+
+    $("nombreTutor").textContent = `${nombreUsuario} · ${etiquetaRol}`;
+    $("nombreSesionTexto").textContent = nombreUsuario.split(/\s+/)[0] || "Estudiante";
+    $("rolSesion").textContent = etiquetaRol;
+
+    let mensajes = [];
+    let mensajesEnviados = [];
+    let mensajesRecibidos = [];
+    let conversaciones = new Map();
+
+    let conversacionActiva = null;
+    let contactoActivo = null;
+    let usuarioBuscado = null;
+    let temporizadorBusqueda = null;
+    let temporizadorAviso = null;
+    let detenerEnviados = null;
+    let detenerRecibidos = null;
+    let enviando = false;
+
+    // --- Utilidades ---
+    function crearNodo(tag, props = {}, hijos = []) {
+      const el = document.createElement(tag);
+      Object.assign(el, props);
+      hijos.forEach(h => el.append(h));
+      return el;
+    }
+
+    function crearIdConversacion(idContacto) {
+      return [usuarioId, String(idContacto).trim()].sort().join("__");
+    }
+
+    function mostrarAviso(texto) {
+      const el = $("mensajeSistema");
+      el.textContent = texto;
+      el.classList.add("visible");
+      clearTimeout(temporizadorAviso);
+      temporizadorAviso = setTimeout(() => el.classList.remove("visible"), 4200);
+    }
+
+    function tiempoMs(valor) {
+      if (valor?.toMillis) return valor.toMillis();
+      if (valor?.toDate) return valor.toDate().getTime();
+      if (valor instanceof Date) return valor.getTime();
+      return 0;
+    }
+
+    function mostrarFecha(valor) {
+      const ms = tiempoMs(valor);
+      if (!ms) return "";
+
+      const fecha = new Date(ms);
+      const hoy = new Date();
+      const ayer = new Date();
+      ayer.setDate(hoy.getDate() - 1);
+
+      if (fecha.toDateString() === hoy.toDateString()) {
+        return fecha.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
+      }
+      if (fecha.toDateString() === ayer.toDateString()) return "Ayer";
+      return fecha.toLocaleDateString("es-MX", { day: "2-digit", month: "short" });
+    }
+
+    function mostrarHoraMensaje(valor) {
+      const ms = tiempoMs(valor);
+      return ms ? new Date(ms).toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }) : "Enviando...";
+    }
+
+    function iniciales(nombre) {
+      const letras = String(nombre || "UV").trim().split(/\s+/).slice(0, 2).map(p => p[0] || "").join("").toUpperCase();
+      return letras || "UV";
+    }
+
+    function obtenerOtroParticipante(m) {
+      const emisor = String(m.emisorId || "");
+      const destinatario = String(m.destinatarioId || "");
+      if (emisor && emisor !== usuarioId) return emisor;
+      if (destinatario && destinatario !== usuarioId) return destinatario;
+      if (m.conversacion) {
+        return String(m.conversacion).split("__").find(id => id && id !== usuarioId) || "";
+      }
+      return "";
+    }
+
+    function nombreDeOtro(m, idOtro) {
+      if (String(m.emisorId || "") !== usuarioId && m.emisorNombre) return String(m.emisorNombre);
+      if (String(m.destinatarioId || "") !== usuarioId && m.destinatarioNombre) return String(m.destinatarioNombre);
+      return String(idOtro || "Usuario UV");
+    }
+
+    function rolDeOtro(m) {
+      if (String(m.emisorId || "") !== usuarioId) return m.rolEmisor === "tutor" ? "Tutor" : "Estudiante";
+      if (String(m.destinatarioId || "") !== usuarioId) return m.rolDestinatario === "tutor" ? "Tutor" : "Estudiante";
+      return "Usuario UV";
+    }
+
+    function textoPreview(m) {
+      if (m?.texto) return String(m.texto);
+      if (m?.archivoNombre) return "📎 " + String(m.archivoNombre);
+      return "Conversación iniciada";
+    }
+
+    // --- Reconstrucción y renderizado de conversaciones ---
+    function reconstruirConversaciones() {
+      conversaciones = new Map();
+      const ordenados = [...mensajes].sort((a, b) => tiempoMs(a.fecha) - tiempoMs(b.fecha));
+
+      for (const m of ordenados) {
+        const idOtro = obtenerOtroParticipante(m);
+        if (!idOtro) continue;
+
+        const clave = m.conversacion || crearIdConversacion(idOtro);
+        const actual = conversaciones.get(clave) || {
+          id: clave,
+          contactoId: idOtro,
+          nombre: nombreDeOtro(m, idOtro),
+          rol: rolDeOtro(m),
+          ultimoMensaje: m
+        };
+
+        actual.contactoId = idOtro;
+        const nombre = nombreDeOtro(m, idOtro);
+        if (nombre && nombre !== idOtro) actual.nombre = nombre;
+        actual.rol = rolDeOtro(m) || actual.rol;
+        actual.ultimoMensaje = m;
+
+        conversaciones.set(clave, actual);
+      }
+
+      renderizarLista();
+      renderizarMensajes();
+      renderizarNotificaciones();
+    }
+
+    function renderizarLista() {
+      const lista = $("listaChats");
+      lista.replaceChildren();
+
+      const filtro = $("buscarChat").value.trim();
+      const opciones = [...conversaciones.values()]
+        .filter(c => !filtro || String(c.contactoId || "").includes(filtro))
+        .sort((a, b) => tiempoMs(b.ultimoMensaje?.fecha) - tiempoMs(a.ultimoMensaje?.fecha));
+
+      if (!opciones.length && !usuarioBuscado) {
+        lista.append(crearNodo("p", {
+          className: "lista-estado",
+          textContent: filtro
+            ? "No hay conversaciones para esa matrícula. Escribe una matrícula registrada para iniciar una conversación."
+            : "Todavía no hay conversaciones. Busca la matrícula de un tutor o estudiante para iniciar un chat."
+        }));
+      }
+
+      for (const c of opciones) {
+        const boton = crearNodo("button", {
+          type: "button",
+          className: "chat-item" + (conversacionActiva === c.id ? " active" : "")
+        }, [
+          crearNodo("span", { className: "avatar", textContent: iniciales(c.nombre) }),
+          crearNodo("span", { className: "chat-detalle" }, [
+            crearNodo("span", { className: "chat-nombre", textContent: c.nombre }),
+            crearNodo("span", { className: "chat-preview", textContent: textoPreview(c.ultimoMensaje) })
+          ]),
+          crearNodo("span", { className: "chat-hora", textContent: mostrarFecha(c.ultimoMensaje?.fecha) })
+        ]);
+
+        const noLeidos = mensajesRecibidos.filter(m => m.conversacion === c.id && m.leido !== true).length;
+        if (noLeidos) {
+          boton.append(crearNodo("span", {
+            className: "chat-no-leidos",
+            textContent: noLeidos > 99 ? "99+" : String(noLeidos)
+          }));
+        }
+
+        boton.addEventListener("click", () => abrirConversacion(c.contactoId, c.nombre, c.rol));
+        lista.append(boton);
+      }
+
+      if (usuarioBuscado && !conversaciones.has(crearIdConversacion(usuarioBuscado.id))) {
+        const botonNuevo = crearNodo("button", { type: "button", className: "chat-candidato" }, [
+          crearNodo("strong", { textContent: "＋ Iniciar conversación" }),
+          crearNodo("span", { textContent: `${usuarioBuscado.nombre} · ${usuarioBuscado.id}` })
+        ]);
+
+        botonNuevo.addEventListener("click", () => {
+          const contacto = { ...usuarioBuscado };
+          usuarioBuscado = null;
+          abrirConversacion(contacto.id, contacto.nombre, contacto.rol);
+          renderizarLista();
+        });
+
+        lista.append(botonNuevo);
+      }
+    }
+
+    async function marcarComoLeidos(idConversacion) {
+      const pendientes = mensajesRecibidos.filter(m => m.conversacion === idConversacion && m.leido !== true);
+      if (!pendientes.length) return;
+
+      await Promise.all(
+        pendientes.map(m =>
+          updateDoc(doc(db, "mensajesTutor", m.id), {
+            leido: true,
+            fechaLectura: serverTimestamp()
+          })
+        )
+      );
+    }
+
+    function abrirConversacion(idContacto, nombre, rol = "Usuario UV") {
+      if (!idContacto || String(idContacto) === usuarioId) return;
+
+      contactoActivo = {
+        id: String(idContacto),
+        nombre: String(nombre || idContacto),
+        rol: String(rol || "Usuario UV")
+      };
+      conversacionActiva = crearIdConversacion(contactoActivo.id);
+
+      $("encabezadoChat").hidden = false;
+      $("avatarGrande").textContent = iniciales(contactoActivo.nombre);
+      $("nombreContacto").textContent = contactoActivo.nombre;
+      $("subtituloContacto").textContent = `${contactoActivo.rol} · Matrícula ${contactoActivo.id}`;
+
+      $("textoChat").disabled = false;
+      $("botonEnviar").disabled = false;
+      $("botonAdjuntar").disabled = false;
+
+      renderizarLista();
+      renderizarMensajes();
+
+      marcarComoLeidos(conversacionActiva).catch(err => console.error("No se pudieron marcar los mensajes como leídos:", err));
+      $("textoChat").focus();
+    }
+
+    // --- Apertura automática desde notificaciones externas ---
+    function abrirChatPendiente() {
+      try {
+        const raw = sessionStorage.getItem("chatPendienteUV");
+        if (!raw) return;
+        sessionStorage.removeItem("chatPendienteUV");
+        const pendiente = JSON.parse(raw);
+        if (pendiente?.matricula) {
+          abrirConversacion(pendiente.matricula, pendiente.nombre, pendiente.rol);
+        }
+      } catch (err) {
+        console.warn("No se pudo abrir chatPendienteUV:", err);
+      }
+    }
+    abrirChatPendiente();
+
+    // --- Renderizado de mensajes ---
+    function crearBurbuja(m) {
+      const mia = String(m.emisorId || "") === usuarioId;
+      const hijos = [];
+
+      if (m.texto) hijos.push(crearNodo("div", { textContent: String(m.texto) }));
+
+      if (m.archivoUrl && m.archivoNombre) {
+        hijos.push(crearNodo("a", {
+          className: "adjunto-mensaje",
+          href: String(m.archivoUrl),
+          target: "_blank",
+          rel: "noopener noreferrer",
+          textContent: "📎 " + String(m.archivoNombre)
+        }));
+      }
+
+      hijos.push(crearNodo("small", {
+        textContent: mostrarHoraMensaje(m.fecha) + (mia && m.leido === true ? " · Leído" : "")
+      }));
+
+      return crearNodo("article", { className: "burbuja" + (mia ? " mia" : "") }, hijos);
+    }
+
+    function renderizarMensajes() {
+      const caja = $("mensajes");
+      caja.replaceChildren();
+
+      if (!conversacionActiva) {
+        caja.append(crearNodo("p", {
+          className: "vacio-chat",
+          textContent: "Selecciona una conversación o busca la matrícula de un usuario UV para comenzar."
+        }));
+        return;
+      }
+
+      const delChat = mensajes
+        .filter(m => {
+          const convId = m.conversacion || (
+            m.emisorId && m.destinatarioId
+              ? crearIdConversacion(m.emisorId === usuarioId ? m.destinatarioId : m.emisorId)
+              : ""
+          );
+          return convId === conversacionActiva;
+        })
+        .sort((a, b) => tiempoMs(a.fecha) - tiempoMs(b.fecha));
+
+      if (!delChat.length) {
+        caja.append(crearNodo("p", {
+          className: "vacio-chat",
+          textContent: "Esta conversación está lista. Escribe un mensaje para comenzar."
+        }));
+      } else {
+        delChat.forEach(m => caja.append(crearBurbuja(m)));
+      }
+
+      caja.scrollTop = caja.scrollHeight;
+    }
+
+    // --- Notificaciones en tiempo real ---
+    function renderizarNotificaciones() {
+      const noLeidos = mensajesRecibidos
+        .filter(m => m.leido !== true)
+        .sort((a, b) => tiempoMs(b.fecha) - tiempoMs(a.fecha));
+
+      const badge = $("badgeNotificaciones");
+      badge.textContent = noLeidos.length > 99 ? "99+" : String(noLeidos.length);
+      badge.classList.toggle("visible", noLeidos.length > 0);
+
+      const lista = $("listaNotificaciones");
+      lista.replaceChildren();
+
+      if (!noLeidos.length) {
+        lista.append(crearNodo("div", { className: "notificacion-vacia", textContent: "No tienes mensajes nuevos." }));
+        return;
+      }
+
+      for (const m of noLeidos.slice(0, 20)) {
+        const idOtro = String(m.emisorId || "");
+        const boton = crearNodo("button", { type: "button", className: "notificacion-chat" }, [
+          crearNodo("strong", { textContent: `${m.emisorNombre || idOtro} · ${idOtro}` }),
+          crearNodo("span", { textContent: textoPreview(m) })
+        ]);
+
+        boton.addEventListener("click", () => {
+          $("panelNotificaciones").classList.remove("visible");
+          abrirConversacion(idOtro, m.emisorNombre || idOtro, m.rolEmisor === "tutor" ? "Tutor" : "Estudiante");
+        });
+
+        lista.append(boton);
+      }
+    }
+
+    // --- Suscripciones de Firestore ---
+    function actualizarDesdeNube() {
+      const mapa = new Map();
+      for (const m of [...mensajesEnviados, ...mensajesRecibidos]) mapa.set(m.id, m);
+      mensajes = [...mapa.values()];
+      reconstruirConversaciones();
+    }
+
+    function escucharMensajes() {
+      detenerEnviados = onSnapshot(
+        query(mensajesRef, where("emisorId", "==", usuarioId)),
+        snap => {
+          mensajesEnviados = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          actualizarDesdeNube();
+        },
+        err => {
+          console.error("Error al escuchar mensajes enviados:", err);
+          mostrarAviso("No se pudieron cargar los mensajes enviados. Revisa las reglas de Firestore.");
+        }
+      );
+
+      detenerRecibidos = onSnapshot(
+        query(mensajesRef, where("destinatarioId", "==", usuarioId)),
+        snap => {
+          mensajesRecibidos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          actualizarDesdeNube();
+          if (conversacionActiva) {
+            marcarComoLeidos(conversacionActiva).catch(err => console.error(err));
+          }
+        },
+        err => {
+          console.error("Error al escuchar mensajes recibidos:", err);
+          mostrarAviso("No se pudieron cargar los mensajes recibidos. Revisa las reglas de Firestore.");
+        }
+      );
+    }
+
+    // --- Búsqueda exclusivamente por matrícula ---
+    async function buscarMatriculaEnNube(valor) {
+      usuarioBuscado = null;
+      if (!valor || valor.length < 4 || valor === usuarioId) {
+        renderizarLista();
+        return;
+      }
+
+      try {
+        const resultado = await getDocs(query(collection(db, "usuarios"), where("matricula", "==", valor)));
+        if ($("buscarChat").value.trim() !== valor) return;
+
+        if (resultado.empty) {
+          mostrarAviso("No encontramos esa matrícula en la colección usuarios de Firestore.");
+          renderizarLista();
+          return;
+        }
+
+        if (resultado.size > 1) {
+          mostrarAviso("Hay matrículas duplicadas en la base de datos. Debe existir un solo usuario por matrícula.");
+          renderizarLista();
+          return;
+        }
+
+        const datos = resultado.docs[0].data();
+        const id = String(datos.matricula || "").trim();
+
+        if (id && id !== usuarioId) {
+          const tipo = String(datos.tipoUsuario || datos.rol || "estudiante").toLowerCase();
+          usuarioBuscado = {
+            id,
+            nombre: String(datos.nombre || datos.nombreCompleto || datos.nombres || datos.correo || id),
+            rol: tipo.includes("tutor") || tipo.includes("docente") ? "Tutor" : "Estudiante"
+          };
+        }
+      } catch (err) {
+        console.error("Error al buscar matrícula:", err);
+        mostrarAviso("No se pudo consultar la matrícula. Revisa Firestore y sus reglas de lectura.");
+      }
+
+      renderizarLista();
+    }
+
+    $("buscarChat").addEventListener("input", () => {
+      usuarioBuscado = null;
+      renderizarLista();
+      clearTimeout(temporizadorBusqueda);
+
+      const valor = $("buscarChat").value.trim();
+      if (valor.length >= 4) {
+        temporizadorBusqueda = setTimeout(() => buscarMatriculaEnNube(valor), 450);
+      }
+    });
+
+    // --- Envío de mensajes y adjuntos ---
+    $("formChat").addEventListener("submit", async e => {
+      e.preventDefault();
+      if (!contactoActivo || enviando) return;
+
+      const texto = $("textoChat").value.trim();
+      const archivo = $("archivoChat").files?.[0] || null;
+      if (!texto && !archivo) return;
+
+      if (archivo && archivo.size > 10 * 1024 * 1024) {
+        mostrarAviso("El archivo supera el límite de 10 MB.");
+        return;
+      }
+
+      enviando = true;
+      $("botonEnviar").disabled = true;
+      const textoAnterior = texto;
+
+      try {
+        let archivoInfo = {};
+        if (archivo) {
+          const nombreSeguro = archivo.name.replace(/[^\w.() -]/g, "_");
+          const ruta = `chats/${conversacionActiva}/${Date.now()}_${nombreSeguro}`;
+          const referencia = ref(storage, ruta);
+
+          await uploadBytes(referencia, archivo, { contentType: archivo.type || "application/octet-stream" });
+          const url = await getDownloadURL(referencia);
+
+          archivoInfo = {
+            archivoUrl: url,
+            archivoNombre: archivo.name,
+            archivoTipo: archivo.type || "application/octet-stream",
+            archivoRuta: ruta
+          };
+        }
+
+        await addDoc(mensajesRef, {
+          conversacion: conversacionActiva,
+          emisorId: usuarioId,
+          emisorNombre: nombreUsuario,
+          destinatarioId: contactoActivo.id,
+          destinatarioNombre: contactoActivo.nombre,
+          rolEmisor: rolUsuario,
+          rolDestinatario: contactoActivo.rol.toLowerCase().includes("tutor") ? "tutor" : "estudiante",
+          texto,
+          leido: false,
+          ...archivoInfo,
+          fecha: serverTimestamp()
+        });
+
+        $("textoChat").value = "";
+        $("archivoChat").value = "";
+        $("archivoPendiente").textContent = "";
+        $("archivoPendiente").classList.remove("visible");
+      } catch (err) {
+        console.error("Error al enviar mensaje:", err);
+        mostrarAviso("No se pudo enviar. Revisa la conexión y las reglas de Firestore/Storage.");
+        $("textoChat").value = textoAnterior;
+      } finally {
+        enviando = false;
+        $("botonEnviar").disabled = !contactoActivo;
+      }
+    });
+
+    $("botonAdjuntar").addEventListener("click", () => $("archivoChat").click());
+
+    $("archivoChat").addEventListener("change", () => {
+      const archivo = $("archivoChat").files?.[0];
+      const etiqueta = $("archivoPendiente");
+
+      if (!archivo) {
+        etiqueta.textContent = "";
+        etiqueta.classList.remove("visible");
+        return;
+      }
+
+      if (archivo.size > 10 * 1024 * 1024) {
+        $("archivoChat").value = "";
+        mostrarAviso("El archivo supera el límite de 10 MB.");
+        return;
+      }
+
+      etiqueta.textContent = "Adjunto: " + archivo.name;
+      etiqueta.classList.add("visible");
+    });
+
+    // --- Interacciones de cabecera y cierre ---
+    $("notificaciones").addEventListener("click", e => {
+      e.stopPropagation();
+      $("menuPerfil").classList.remove("visible");
+      $("panelNotificaciones").classList.toggle("visible");
+    });
+
+    $("menuUsuario").addEventListener("click", e => {
+      e.stopPropagation();
+      $("panelNotificaciones").classList.remove("visible");
+      $("menuPerfil").classList.toggle("visible");
+    });
+
+    // Cierra sesión y redirige a la pantalla de login
+    $("cerrarSesion").addEventListener("click", () => {
+      detenerEnviados?.();
+      detenerRecibidos?.();
+      ["usuarioUV", "perfilSeleccionadoUV", "tipoUsuario", "chatPendienteUV"].forEach(k => sessionStorage.removeItem(k));
+      location.href = "../codigo principal/login.html";
+    });
+
+    document.addEventListener("click", e => {
+      if (!e.target.closest("#panelNotificaciones, #notificaciones")) $("panelNotificaciones").classList.remove("visible");
+      if (!e.target.closest("#menuPerfil, #menuUsuario")) $("menuPerfil").classList.remove("visible");
+    });
+
+    window.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        $("menuPerfil").classList.remove("visible");
+        $("panelNotificaciones").classList.remove("visible");
+      }
+    });
+
+    escucharMensajes();
+  </script>
+</body>
+</html>
